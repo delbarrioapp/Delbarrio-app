@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { listarProductos, guardarVenta } from '../lib/api'
 import Escaner from '../components/Escaner'
 
@@ -10,8 +11,10 @@ const METODOS = [
 ]
 
 export default function Vender() {
+  const navigate = useNavigate()
   const [productos, setProductos] = useState([])
   const [busqueda, setBusqueda] = useState('')
+  const [categoriaFiltro, setCategoriaFiltro] = useState('Todas')
   const [carrito, setCarrito] = useState([])
   const [mensaje, setMensaje] = useState(null)
   const [cargando, setCargando] = useState(true)
@@ -30,6 +33,11 @@ export default function Vender() {
     }
     setCargando(false)
   }
+
+  const categorias = useMemo(() => {
+    const set = new Set(productos.map(p => p.categoria || 'Sin categoria'))
+    return ['Todas', ...Array.from(set).sort()]
+  }, [productos])
 
   function agregar(p) {
     const enCarrito = carrito.find(i => i.id === p.id)
@@ -81,20 +89,23 @@ export default function Vender() {
   async function cobrarCon(metodo) {
     setMostrarMetodos(false)
     try {
-      await guardarVenta(carrito, metodo)
-      setMensaje('Venta de $' + total.toLocaleString('es-AR') + ' en ' + metodo)
+      const venta = await guardarVenta(carrito, metodo)
       setCarrito([])
-      cargar()
-      setTimeout(() => setMensaje(null), 3000)
+      navigate('/ticket/' + venta.id)
     } catch (e) {
       setMensaje('Error al cobrar: ' + e.message)
     }
   }
 
-  const filtrados = productos.filter(p =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    (p.codigo_barras || '').includes(busqueda)
-  )
+  const filtrados = productos.filter(p => {
+    const coincideBusqueda =
+      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      (p.codigo_barras || '').includes(busqueda)
+    const coincideCategoria =
+      categoriaFiltro === 'Todas' ||
+      (p.categoria || 'Sin categoria') === categoriaFiltro
+    return coincideBusqueda && coincideCategoria
+  })
 
   return (
     <div className="p-4 max-w-2xl mx-auto pb-40">
@@ -106,7 +117,7 @@ export default function Vender() {
         </div>
       )}
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-3">
         <input
           type="text"
           placeholder="Buscar o escanear..."
@@ -122,8 +133,29 @@ export default function Vender() {
         </button>
       </div>
 
+      <div className="flex gap-2 overflow-x-auto pb-3 mb-2">
+        {categorias.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCategoriaFiltro(cat)}
+            className={
+              'px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap ' +
+              (categoriaFiltro === cat
+                ? 'bg-barrio-500 text-white'
+                : 'bg-white text-gray-600 border border-gray-200')
+            }
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {cargando ? (
         <p className="text-center text-gray-500 py-8">Cargando...</p>
+      ) : filtrados.length === 0 ? (
+        <p className="text-center text-gray-500 py-8">
+          No se encontraron productos.
+        </p>
       ) : (
         <div className="space-y-2">
           {filtrados.map(p => (

@@ -48,7 +48,7 @@ export default function Productos() {
       const actualizado = await ajustarStock(p.id, delta)
       setProductos(productos.map(x => x.id === p.id ? actualizado : x))
     } catch (e) {
-      alert('Error: ' + e.message)
+      mostrarMensaje('Error: ' + e.message, 'error')
     }
   }
 
@@ -92,21 +92,21 @@ export default function Productos() {
       await borrarProducto(p.id)
       setProductos(productos.filter(x => x.id !== p.id))
     } catch (e) {
-      alert('Error: ' + e.message)
+      mostrarMensaje('Error: ' + e.message, 'error')
     }
   }
 
   function estadoStock(p) {
-    if (p.stock_actual <= 0) return { color: 'bg-red-100 text-red-700', txt: 'Agotado' }
-    if (p.stock_actual <= p.stock_minimo) return { color: 'bg-yellow-100 text-yellow-700', txt: 'Reponer' }
-    return { color: 'bg-green-100 text-green-700', txt: 'OK' }
+    if (p.stock_actual <= 0) return { color: 'bg-red-50 text-red-600', txt: 'Agotado' }
+    if (p.stock_actual <= p.stock_minimo) return { color: 'bg-amber-50 text-amber-700', txt: 'Reponer' }
+    return { color: 'bg-emerald-50 text-emerald-700', txt: 'OK' }
   }
 
   function estadoVencimiento(p) {
     const dias = diasParaVencer(p.fecha_vencimiento)
     if (dias === null) return null
-    if (dias < 0) return { color: 'bg-red-100 text-red-700', txt: 'VENCIDO' }
-    if (dias <= 30) return { color: 'bg-orange-100 text-orange-700', txt: 'Vence en ' + dias + 'd' }
+    if (dias < 0) return { color: 'bg-red-50 text-red-600', txt: 'Vencido' }
+    if (dias <= 30) return { color: 'bg-amber-50 text-amber-700', txt: 'Vence ' + dias + 'd' }
     return null
   }
 
@@ -144,149 +144,216 @@ export default function Productos() {
     return dias !== null && dias <= 30
   }).length
 
+  const totalReponer = productos.filter(p =>
+    Number(p.stock_actual) <= Number(p.stock_minimo)
+  ).length
+
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-barrio-700">Productos</h1>
-        <span className="text-sm text-gray-500">{productos.length} en total</span>
+    <div className="pb-6">
+      {/* Header de sección */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold text-gray-800">Productos</h1>
+          <span className="text-xs text-gray-400 font-medium">
+            {productos.length} en total
+          </span>
+        </div>
+
+        {/* Buscador con botón de escanear */}
+        <div className="flex gap-2 mb-3">
+          <div className="flex-1 relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar producto..."
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              className="w-full pl-10 pr-3 py-3 rounded-xl bg-gray-50 border border-transparent text-base focus:outline-none focus:bg-white focus:border-barrio-500"
+            />
+          </div>
+          <button
+            onClick={() => setEscaneando(true)}
+            className="bg-barrio-500 text-white px-4 rounded-xl text-xl"
+            title="Reponer con escaner"
+          >
+            📷
+          </button>
+        </div>
+
+        {/* Alertas como chips compactos */}
+        {(totalPorVencer > 0 || totalReponer > 0) && (
+          <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+            {totalReponer > 0 && (
+              <button
+                onClick={() => { setSoloPorVencer(false); setCategoriaFiltro('Todas') }}
+                className="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap"
+              >
+                ⚠️ {totalReponer} para reponer
+              </button>
+            )}
+            {totalPorVencer > 0 && (
+              <button
+                onClick={() => setSoloPorVencer(!soloPorVencer)}
+                className={
+                  'px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border ' +
+                  (soloPorVencer
+                    ? 'bg-amber-500 text-white border-amber-500'
+                    : 'bg-amber-50 text-amber-700 border-amber-200')
+                }
+              >
+                📅 {totalPorVencer} por vencer
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Filtros por categoría */}
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+          {categorias.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setCategoriaFiltro(cat)}
+              className={
+                'px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ' +
+                (categoriaFiltro === cat
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-gray-100 text-gray-600')
+              }
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Mensaje flotante */}
       {mensaje && (
-        <div className={'rounded-xl p-3 mb-3 text-sm ' + (mensaje.tipo === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200')}>
-          {mensaje.txt}
+        <div className="px-4 mb-3">
+          <div className={
+            'rounded-xl p-3 text-sm ' +
+            (mensaje.tipo === 'error'
+              ? 'bg-red-50 text-red-700 border border-red-200'
+              : 'bg-emerald-50 text-emerald-700 border border-emerald-200')
+          }>
+            {mensaje.txt}
+          </div>
         </div>
       )}
 
-      <button
-        onClick={() => setEscaneando(true)}
-        className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg mb-3 flex items-center justify-center gap-2"
-      >
-        📦 Reponer mercaderia
-      </button>
+      {/* Lista de productos */}
+      <div className="px-4">
+        {cargando && (
+          <div className="text-center text-gray-400 py-12">Cargando...</div>
+        )}
 
-      <input
-        type="text"
-        placeholder="Buscar por nombre o codigo..."
-        value={busqueda}
-        onChange={e => setBusqueda(e.target.value)}
-        className="w-full p-3 rounded-xl border border-gray-200 mb-3 text-lg focus:outline-none focus:border-barrio-500"
-      />
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+            <p className="font-semibold mb-1">Error</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
 
-      {totalPorVencer > 0 && (
-        <button
-          onClick={() => setSoloPorVencer(!soloPorVencer)}
-          className={
-            'w-full mb-3 p-3 rounded-xl font-semibold text-left ' +
-            (soloPorVencer
-              ? 'bg-orange-500 text-white'
-              : 'bg-orange-50 text-orange-700 border border-orange-200')
-          }
-        >
-          ⚠️ {totalPorVencer} producto{totalPorVencer > 1 ? 's' : ''} por vencer
-          {soloPorVencer ? ' (tocá para ver todos)' : ' (tocá para ver solo estos)'}
-        </button>
-      )}
+        {!cargando && !error && filtrados.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-4xl mb-2">📦</p>
+            <p className="text-gray-500">
+              {busqueda ? 'Sin resultados' : 'No hay productos todavia'}
+            </p>
+          </div>
+        )}
 
-      <div className="flex gap-2 overflow-x-auto pb-3 mb-2">
-        {categorias.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCategoriaFiltro(cat)}
-            className={
-              'px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap ' +
-              (categoriaFiltro === cat
-                ? 'bg-barrio-500 text-white'
-                : 'bg-white text-gray-600 border border-gray-200')
-            }
-          >
-            {cat}
-          </button>
+        {!cargando && !error && categoriasOrdenadas.map(cat => (
+          <div key={cat} className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                {cat}
+              </h2>
+              <span className="text-xs text-gray-300">
+                {grupos[cat].length}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {grupos[cat].map(p => {
+                const est = estadoStock(p)
+                const ven = estadoVencimiento(p)
+                return (
+                  <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    {/* Fila superior: nombre, precio, estado */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div
+                        onClick={() => navigate('/editar/' + p.id)}
+                        className="flex-1 min-w-0 cursor-pointer"
+                      >
+                        <p className="font-semibold text-gray-800 truncate">
+                          {p.nombre}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                          ${Number(p.precio).toLocaleString('es-AR')}
+                          <span className="text-gray-400"> / {p.unidad}</span>
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={'text-[10px] font-bold px-2 py-1 rounded-full uppercase ' + est.color}>
+                          {est.txt}
+                        </span>
+                        {ven && (
+                          <span className={'text-[10px] font-bold px-2 py-0.5 rounded-full ' + ven.color}>
+                            {ven.txt}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Fila inferior: stock con +/-, y acciones */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => cambiarStock(p, -1)}
+                          className="w-9 h-9 rounded-full bg-gray-50 text-gray-600 text-lg font-medium active:bg-gray-100"
+                        >
+                          −
+                        </button>
+                        <span className="font-bold text-gray-800 text-base min-w-[60px] text-center">
+                          {Number(p.stock_actual)}
+                          <span className="text-xs text-gray-400 font-normal ml-1">
+                            {p.unidad}
+                          </span>
+                        </span>
+                        <button
+                          onClick={() => cambiarStock(p, 1)}
+                          className="w-9 h-9 rounded-full bg-gray-50 text-gray-600 text-lg font-medium active:bg-gray-100"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => abrirReponer(p)}
+                          className="text-xs font-semibold text-barrio-600 px-3 py-2 rounded-lg"
+                        >
+                          Reponer
+                        </button>
+                        <button
+                          onClick={() => eliminar(p)}
+                          className="text-gray-300 text-lg px-1"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         ))}
       </div>
 
-      {cargando && <p className="text-center text-gray-500 py-8">Cargando...</p>}
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
-          <p className="font-semibold mb-1">Error</p>
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
-
-      {!cargando && !error && filtrados.length === 0 && (
-        <p className="text-center text-gray-500 py-8">
-          {busqueda ? 'No se encontraron productos.' : 'No hay productos todavia.'}
-        </p>
-      )}
-
-      {!cargando && !error && categoriasOrdenadas.map(cat => (
-        <div key={cat} className="mb-5">
-          <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-sm font-bold text-barrio-700 uppercase tracking-wide">
-              {cat}
-            </h2>
-            <span className="text-xs text-gray-400">({grupos[cat].length})</span>
-          </div>
-
-          {grupos[cat].map(p => {
-            const est = estadoStock(p)
-            const ven = estadoVencimiento(p)
-            return (
-              <div key={p.id} className="bg-white rounded-xl p-4 mb-2 shadow-sm">
-                <div className="flex justify-between items-start mb-2">
-                  <div onClick={() => navigate('/editar/' + p.id)} className="flex-1 cursor-pointer">
-                    <p className="font-semibold text-gray-800">{p.nombre}</p>
-                    <p className="text-sm text-gray-500">
-                      ${Number(p.precio).toLocaleString('es-AR')} / {p.unidad}
-                    </p>
-                    {ven && (
-                      <span className={'inline-block mt-1 text-xs px-2 py-0.5 rounded-full ' + ven.color}>
-                        {ven.txt}
-                      </span>
-                    )}
-                  </div>
-                  <span className={'text-xs px-2 py-1 rounded-full ' + est.color}>
-                    {est.txt}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 gap-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => cambiarStock(p, -1)}
-                      className="w-9 h-9 rounded-full bg-red-100 text-red-600 text-lg font-bold"
-                    >
-                      −
-                    </button>
-                    <span className="font-bold text-base min-w-[70px] text-center">
-                      {Number(p.stock_actual)} {p.unidad}
-                    </span>
-                    <button
-                      onClick={() => cambiarStock(p, 1)}
-                      className="w-9 h-9 rounded-full bg-green-100 text-green-600 text-lg font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => abrirReponer(p)}
-                    className="bg-barrio-100 text-barrio-700 text-sm px-3 py-2 rounded-lg font-semibold"
-                  >
-                    Reponer
-                  </button>
-                  <button
-                    onClick={() => eliminar(p)}
-                    className="text-red-500 text-sm px-2 py-2"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      ))}
-
+      {/* Modal de reponer */}
       {escaneando && (
         <Escaner
           onDetectado={alEscanearReponer}
@@ -295,13 +362,13 @@ export default function Productos() {
       )}
 
       {reponiendo && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <p className="font-bold text-lg mb-1">{reponiendo.nombre}</p>
+            <p className="font-bold text-lg mb-1 text-gray-800">{reponiendo.nombre}</p>
             <p className="text-sm text-gray-500 mb-4">
               Stock actual: {Number(reponiendo.stock_actual)} {reponiendo.unidad}
             </p>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-600 mb-2">
               ¿Cuántas unidades llegaron?
             </label>
             <input
@@ -310,11 +377,12 @@ export default function Productos() {
               autoFocus
               value={cantidad}
               onChange={e => setCantidad(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && confirmarReponer()}
               placeholder="0"
-              className="w-full p-3 rounded-xl border border-gray-200 text-2xl font-bold text-center mb-4"
+              className="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-2xl font-bold text-center mb-4 focus:outline-none focus:border-barrio-500"
             />
             {cantidad && Number(cantidad) > 0 && (
-              <p className="text-center text-sm text-green-700 mb-3">
+              <p className="text-center text-sm text-emerald-600 mb-3 font-medium">
                 Nuevo stock: {(Number(reponiendo.stock_actual) + Number(cantidad))} {reponiendo.unidad}
               </p>
             )}
@@ -328,7 +396,7 @@ export default function Productos() {
               <button
                 onClick={confirmarReponer}
                 disabled={!cantidad || Number(cantidad) <= 0}
-                className="flex-1 bg-barrio-500 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                className="flex-1 bg-barrio-500 text-white py-3 rounded-xl font-bold disabled:opacity-40"
               >
                 Reponer
               </button>
