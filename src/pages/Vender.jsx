@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listarProductos, guardarVenta } from '../lib/api'
+import Escaner from '../components/Escaner'
 
 const METODOS = [
   { id: 'efectivo', label: 'Efectivo', color: 'bg-green-500' },
@@ -15,6 +16,7 @@ export default function Vender() {
   const [mensaje, setMensaje] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [mostrarMetodos, setMostrarMetodos] = useState(false)
+  const [escaneando, setEscaneando] = useState(false)
 
   useEffect(() => { cargar() }, [])
 
@@ -30,8 +32,16 @@ export default function Vender() {
   }
 
   function agregar(p) {
-    const existe = carrito.find(i => i.id === p.id)
-    if (existe) {
+    const enCarrito = carrito.find(i => i.id === p.id)
+    const cantidadEnCarrito = enCarrito ? enCarrito.cantidad : 0
+
+    if (Number(p.stock_actual) <= cantidadEnCarrito) {
+      setMensaje('Sin stock suficiente de ' + p.nombre)
+      setTimeout(() => setMensaje(null), 2000)
+      return
+    }
+
+    if (enCarrito) {
       setCarrito(carrito.map(i =>
         i.id === p.id ? { ...i, cantidad: i.cantidad + 1 } : i
       ))
@@ -48,6 +58,19 @@ export default function Vender() {
       setCarrito(carrito.map(i =>
         i.id === id ? { ...i, cantidad: i.cantidad - 1 } : i
       ))
+    }
+  }
+
+  function alEscanear(codigo) {
+    setEscaneando(false)
+    const producto = productos.find(p => p.codigo_barras === codigo)
+    if (producto) {
+      agregar(producto)
+      setMensaje('Agregado: ' + producto.nombre)
+      setTimeout(() => setMensaje(null), 1500)
+    } else {
+      setMensaje('Producto no encontrado: ' + codigo)
+      setTimeout(() => setMensaje(null), 3000)
     }
   }
 
@@ -69,7 +92,8 @@ export default function Vender() {
   }
 
   const filtrados = productos.filter(p =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+    (p.codigo_barras || '').includes(busqueda)
   )
 
   return (
@@ -82,13 +106,21 @@ export default function Vender() {
         </div>
       )}
 
-      <input
-        type="text"
-        placeholder="Buscar producto..."
-        value={busqueda}
-        onChange={e => setBusqueda(e.target.value)}
-        className="w-full p-3 rounded-xl border border-gray-200 mb-4 text-lg"
-      />
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Buscar o escanear..."
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          className="flex-1 p-3 rounded-xl border border-gray-200 text-lg"
+        />
+        <button
+          onClick={() => setEscaneando(true)}
+          className="bg-barrio-500 text-white px-4 rounded-xl font-bold text-2xl"
+        >
+          📷
+        </button>
+      </div>
 
       {cargando ? (
         <p className="text-center text-gray-500 py-8">Cargando...</p>
@@ -170,6 +202,13 @@ export default function Vender() {
             </button>
           </div>
         </div>
+      )}
+
+      {escaneando && (
+        <Escaner
+          onDetectado={alEscanear}
+          onCerrar={() => setEscaneando(false)}
+        />
       )}
     </div>
   )

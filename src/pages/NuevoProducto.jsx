@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { crearProducto } from '../lib/api'
+import Escaner from '../components/Escaner'
 
 export default function NuevoProducto() {
   const navigate = useNavigate()
@@ -11,10 +12,12 @@ export default function NuevoProducto() {
     stock_minimo: '',
     unidad: 'unidad',
     categoria: '',
+    codigo_barras: '',
     fecha_vencimiento: ''
   })
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
+  const [escaneando, setEscaneando] = useState(false)
 
   function cambiar(campo, valor) {
     setForm({ ...form, [campo]: valor })
@@ -33,6 +36,7 @@ export default function NuevoProducto() {
         stock_minimo: Number(form.stock_minimo) || 0,
         unidad: form.unidad,
         categoria: form.categoria.trim() || 'Sin categoria',
+        codigo_barras: form.codigo_barras.trim() || null,
         fecha_vencimiento: form.fecha_vencimiento || null
       })
       navigate('/')
@@ -54,6 +58,23 @@ export default function NuevoProducto() {
           onChange={e => cambiar('nombre', e.target.value)}
           className="w-full p-3 rounded-xl border border-gray-200 text-lg"
         />
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Codigo de barras"
+            value={form.codigo_barras}
+            onChange={e => cambiar('codigo_barras', e.target.value)}
+            className="flex-1 p-3 rounded-xl border border-gray-200 text-lg"
+          />
+          <button
+            type="button"
+            onClick={() => setEscaneando(true)}
+            className="bg-barrio-500 text-white px-4 rounded-xl text-2xl"
+          >
+            📷
+          </button>
+        </div>
 
         <input
           type="text"
@@ -142,6 +163,16 @@ export default function NuevoProducto() {
           {guardando ? 'Guardando...' : 'Guardar producto'}
         </button>
       </form>
+
+      {escaneando && (
+        <Escaner
+          onDetectado={(codigo) => {
+            setEscaneando(false)
+            cambiar('codigo_barras', codigo)
+          }}
+          onCerrar={() => setEscaneando(false)}
+        />
+      )}
     </div>
   )
 }

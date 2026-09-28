@@ -100,4 +100,37 @@ export async function listarVentasHoy() {
   return data || []
 }
 
+export async function listarVentasEfectivoHoy() {
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  const { data, error } = await supabase
+    .from('ventas')
+    .select('total')
+    .eq('metodo_pago', 'efectivo')
+    .gte('fecha', hoy.toISOString())
+  if (error) throw error
+  const total = (data || []).reduce((s, v) => s + Number(v.total), 0)
+  return total
+}
+
+export async function guardarCierreCaja(datos) {
+  const { data, error } = await supabase
+    .from('cierres_caja')
+    .insert(datos)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function listarCierres() {
+  const { data, error } = await supabase
+    .from('cierres_caja')
+    .select('*')
+    .order('fecha', { ascending: false })
+    .limit(30)
+  if (error) throw error
+  return data || []
+}
+
 

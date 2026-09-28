@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { listarProductos, ajustarStock, borrarProducto } from '../lib/api'
+import { listarProductos, ajustarStock, borrarProducto, actualizarProducto } from '../lib/api'
+import Escaner from '../components/Escaner'
 
 function diasParaVencer(fecha) {
   if (!fecha) return null
@@ -18,6 +19,10 @@ export default function Productos() {
   const [soloPorVencer, setSoloPorVencer] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const [escaneando, setEscaneando] = useState(false)
+  const [reponiendo, setReponiendo] = useState(null)
+  const [cantidad, setCantidad] = useState('')
+  const [mensaje, setMensaje] = useState(null)
 
   useEffect(() => { cargar() }, [])
 
@@ -33,12 +38,51 @@ export default function Productos() {
     setCargando(false)
   }
 
+  function mostrarMensaje(txt, tipo = 'ok') {
+    setMensaje({ txt, tipo })
+    setTimeout(() => setMensaje(null), 2500)
+  }
+
   async function cambiarStock(p, delta) {
     try {
       const actualizado = await ajustarStock(p.id, delta)
       setProductos(productos.map(x => x.id === p.id ? actualizado : x))
     } catch (e) {
       alert('Error: ' + e.message)
+    }
+  }
+
+  function abrirReponer(p) {
+    setReponiendo(p)
+    setCantidad('')
+  }
+
+  async function confirmarReponer() {
+    const cant = Number(cantidad)
+    if (!cant || cant <= 0) return
+    try {
+      const actualizado = await actualizarProducto(reponiendo.id, {
+        stock_actual: Number(reponiendo.stock_actual) + cant
+      })
+      setProductos(productos.map(x => x.id === reponiendo.id ? actualizado : x))
+      mostrarMensaje('Repuesto: ' + reponiendo.nombre + ' +' + cant)
+      setReponiendo(null)
+      setCantidad('')
+    } catch (e) {
+      mostrarMensaje('Error: ' + e.message, 'error')
+    }
+  }
+
+  function alEscanearReponer(codigo) {
+    setEscaneando(false)
+    const producto = productos.find(p => p.codigo_barras === codigo)
+    if (producto) {
+      setReponiendo(producto)
+      setCantidad('')
+    } else {
+      if (confirm('Producto no encontrado con codigo ' + codigo + '.\n¿Queres cargarlo?')) {
+        navigate('/nuevo')
+      }
     }
   }
 
@@ -107,6 +151,19 @@ export default function Productos() {
         <span className="text-sm text-gray-500">{productos.length} en total</span>
       </div>
 
+      {mensaje && (
+        <div className={'rounded-xl p-3 mb-3 text-sm ' + (mensaje.tipo === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200')}>
+          {mensaje.txt}
+        </div>
+      )}
+
+      <button
+        onClick={() => setEscaneando(true)}
+        className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg mb-3 flex items-center justify-center gap-2"
+      >
+        📦 Reponer mercaderia
+      </button>
+
       <input
         type="text"
         placeholder="Buscar por nombre o codigo..."
@@ -158,9 +215,7 @@ export default function Productos() {
 
       {!cargando && !error && filtrados.length === 0 && (
         <p className="text-center text-gray-500 py-8">
-          {busqueda || categoriaFiltro !== 'Todas' || soloPorVencer
-            ? 'No se encontraron productos.'
-            : 'No hay productos todavia.'}
+          {busqueda ? 'No se encontraron productos.' : 'No hay productos todavia.'}
         </p>
       )}
 
@@ -195,29 +250,35 @@ export default function Productos() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => cambiarStock(p, -1)}
-                      className="w-10 h-10 rounded-full bg-red-100 text-red-600 text-xl font-bold"
+                      className="w-9 h-9 rounded-full bg-red-100 text-red-600 text-lg font-bold"
                     >
                       −
                     </button>
-                    <span className="font-bold text-lg min-w-[80px] text-center">
+                    <span className="font-bold text-base min-w-[70px] text-center">
                       {Number(p.stock_actual)} {p.unidad}
                     </span>
                     <button
                       onClick={() => cambiarStock(p, 1)}
-                      className="w-10 h-10 rounded-full bg-green-100 text-green-600 text-xl font-bold"
+                      className="w-9 h-9 rounded-full bg-green-100 text-green-600 text-lg font-bold"
                     >
                       +
                     </button>
                   </div>
                   <button
-                    onClick={() => eliminar(p)}
-                    className="text-red-500 text-sm px-3 py-2"
+                    onClick={() => abrirReponer(p)}
+                    className="bg-barrio-100 text-barrio-700 text-sm px-3 py-2 rounded-lg font-semibold"
                   >
-                    Borrar
+                    Reponer
+                  </button>
+                  <button
+                    onClick={() => eliminar(p)}
+                    className="text-red-500 text-sm px-2 py-2"
+                  >
+                    ✕
                   </button>
                 </div>
               </div>
@@ -225,6 +286,56 @@ export default function Productos() {
           })}
         </div>
       ))}
+
+      {escaneando && (
+        <Escaner
+          onDetectado={alEscanearReponer}
+          onCerrar={() => setEscaneando(false)}
+        />
+      )}
+
+      {reponiendo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <p className="font-bold text-lg mb-1">{reponiendo.nombre}</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Stock actual: {Number(reponiendo.stock_actual)} {reponiendo.unidad}
+            </p>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              ¿Cuántas unidades llegaron?
+            </label>
+            <input
+              type="number"
+              step="0.001"
+              autoFocus
+              value={cantidad}
+              onChange={e => setCantidad(e.target.value)}
+              placeholder="0"
+              className="w-full p-3 rounded-xl border border-gray-200 text-2xl font-bold text-center mb-4"
+            />
+            {cantidad && Number(cantidad) > 0 && (
+              <p className="text-center text-sm text-green-700 mb-3">
+                Nuevo stock: {(Number(reponiendo.stock_actual) + Number(cantidad))} {reponiendo.unidad}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setReponiendo(null)}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarReponer}
+                disabled={!cantidad || Number(cantidad) <= 0}
+                className="flex-1 bg-barrio-500 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+              >
+                Reponer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
