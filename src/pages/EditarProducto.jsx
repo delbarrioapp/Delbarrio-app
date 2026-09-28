@@ -1,20 +1,34 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { crearProducto } from '../lib/api'
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { actualizarProducto, borrarProducto } from '../lib/api'
 
-export default function NuevoProducto() {
+export default function EditarProducto() {
+  const { id } = useParams()
   const navigate = useNavigate()
-  const [form, setForm] = useState({
-    nombre: '',
-    precio: '',
-    stock_actual: '',
-    stock_minimo: '',
-    unidad: 'unidad',
-    categoria: '',
-    fecha_vencimiento: ''
-  })
+  const [form, setForm] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
+
+  useEffect(() => { cargar() }, [id])
+
+  async function cargar() {
+    const { data, error } = await supabase
+      .from('productos')
+      .select('*')
+      .eq('id', id)
+      .single()
+    if (error) return setError(error.message)
+    setForm({
+      nombre: data.nombre,
+      precio: data.precio,
+      stock_actual: data.stock_actual,
+      stock_minimo: data.stock_minimo,
+      unidad: data.unidad,
+      categoria: data.categoria || '',
+      fecha_vencimiento: data.fecha_vencimiento || ''
+    })
+  }
 
   function cambiar(campo, valor) {
     setForm({ ...form, [campo]: valor })
@@ -26,7 +40,7 @@ export default function NuevoProducto() {
     setGuardando(true)
     setError(null)
     try {
-      await crearProducto({
+      await actualizarProducto(id, {
         nombre: form.nombre,
         precio: Number(form.precio) || 0,
         stock_actual: Number(form.stock_actual) || 0,
@@ -42,14 +56,38 @@ export default function NuevoProducto() {
     setGuardando(false)
   }
 
+  async function eliminar() {
+    if (!confirm('Borrar este producto?')) return
+    try {
+      await borrarProducto(id)
+      navigate('/')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  if (error && !form) {
+    return (
+      <div className="p-4">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+          {error}
+        </div>
+      </div>
+    )
+  }
+
+  if (!form) {
+    return <p className="p-4 text-center text-gray-500">Cargando...</p>
+  }
+
   return (
     <div className="p-4 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-barrio-700">Nuevo producto</h1>
+      <h1 className="text-2xl font-bold mb-4 text-barrio-700">Editar producto</h1>
 
       <form onSubmit={guardar} className="space-y-3">
         <input
           type="text"
-          placeholder="Nombre del producto"
+          placeholder="Nombre"
           value={form.nombre}
           onChange={e => cambiar('nombre', e.target.value)}
           className="w-full p-3 rounded-xl border border-gray-200 text-lg"
@@ -57,7 +95,7 @@ export default function NuevoProducto() {
 
         <input
           type="text"
-          placeholder="Categoria (ej: Bebidas)"
+          placeholder="Categoria"
           value={form.categoria}
           onChange={e => cambiar('categoria', e.target.value)}
           list="categorias-sugeridas"
@@ -119,7 +157,7 @@ export default function NuevoProducto() {
         </select>
 
         <div>
-          <label className="text-sm text-gray-600 block mb-1">Fecha de vencimiento (opcional)</label>
+          <label className="text-sm text-gray-600 block mb-1">Fecha de vencimiento</label>
           <input
             type="date"
             value={form.fecha_vencimiento}
@@ -139,7 +177,15 @@ export default function NuevoProducto() {
           disabled={guardando}
           className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50"
         >
-          {guardando ? 'Guardando...' : 'Guardar producto'}
+          {guardando ? 'Guardando...' : 'Guardar cambios'}
+        </button>
+
+        <button
+          type="button"
+          onClick={eliminar}
+          className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-semibold"
+        >
+          Borrar producto
         </button>
       </form>
     </div>

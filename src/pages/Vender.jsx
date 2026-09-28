@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { listarProductos, ajustarStock } from '../lib/api'
+import { listarProductos, guardarVenta } from '../lib/api'
+
+const METODOS = [
+  { id: 'efectivo', label: 'Efectivo', color: 'bg-green-500' },
+  { id: 'transferencia', label: 'Transferencia', color: 'bg-blue-500' },
+  { id: 'mercadopago', label: 'Mercado Pago', color: 'bg-cyan-500' },
+  { id: 'tarjeta', label: 'Tarjeta', color: 'bg-purple-500' }
+]
 
 export default function Vender() {
   const [productos, setProductos] = useState([])
@@ -7,6 +14,7 @@ export default function Vender() {
   const [carrito, setCarrito] = useState([])
   const [mensaje, setMensaje] = useState(null)
   const [cargando, setCargando] = useState(true)
+  const [mostrarMetodos, setMostrarMetodos] = useState(false)
 
   useEffect(() => { cargar() }, [])
 
@@ -16,7 +24,7 @@ export default function Vender() {
       const data = await listarProductos()
       setProductos(data)
     } catch (e) {
-      setMensaje('Error al cargar: ' + e.message)
+      setMensaje('Error: ' + e.message)
     }
     setCargando(false)
   }
@@ -47,13 +55,11 @@ export default function Vender() {
     (sum, i) => sum + Number(i.precio) * i.cantidad, 0
   )
 
-  async function cobrar() {
-    if (carrito.length === 0) return
+  async function cobrarCon(metodo) {
+    setMostrarMetodos(false)
     try {
-      for (const item of carrito) {
-        await ajustarStock(item.id, -item.cantidad)
-      }
-      setMensaje('Venta registrada: $' + total.toLocaleString('es-AR'))
+      await guardarVenta(carrito, metodo)
+      setMensaje('Venta de $' + total.toLocaleString('es-AR') + ' en ' + metodo)
       setCarrito([])
       cargar()
       setTimeout(() => setMensaje(null), 3000)
@@ -107,7 +113,7 @@ export default function Vender() {
       )}
 
       {carrito.length > 0 && (
-        <div className="fixed bottom-16 left-0 right-0 bg-white border-t shadow-lg p-4 max-h-80 overflow-y-auto">
+        <div className="fixed bottom-16 left-0 right-0 bg-white border-t shadow-lg p-4 max-h-96 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
             <p className="font-bold text-gray-700 mb-2">Carrito</p>
             {carrito.map(i => (
@@ -131,7 +137,7 @@ export default function Vender() {
                 Total: ${total.toLocaleString('es-AR')}
               </span>
               <button
-                onClick={cobrar}
+                onClick={() => setMostrarMetodos(true)}
                 className="bg-barrio-500 text-white px-6 py-3 rounded-xl font-bold"
               >
                 COBRAR
@@ -140,9 +146,33 @@ export default function Vender() {
           </div>
         </div>
       )}
+
+      {mostrarMetodos && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
+          <div className="bg-white w-full rounded-t-2xl p-4">
+            <p className="text-lg font-bold mb-3 text-center">¿Cómo paga?</p>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              {METODOS.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => cobrarCon(m.id)}
+                  className={m.color + ' text-white py-5 rounded-xl font-bold text-lg'}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setMostrarMetodos(false)}
+              className="w-full bg-gray-100 text-gray-600 py-3 rounded-xl font-semibold"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-
 
 
