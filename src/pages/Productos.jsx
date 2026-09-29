@@ -97,16 +97,16 @@ export default function Productos() {
   }
 
   function estadoStock(p) {
-    if (p.stock_actual <= 0) return { color: 'bg-red-50 text-red-600', txt: 'Agotado' }
-    if (p.stock_actual <= p.stock_minimo) return { color: 'bg-amber-50 text-amber-700', txt: 'Reponer' }
-    return { color: 'bg-emerald-50 text-emerald-700', txt: 'OK' }
+    if (p.stock_actual <= 0) return { color: 'bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400', txt: 'Agotado' }
+    if (p.stock_actual <= p.stock_minimo) return { color: 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400', txt: 'Reponer' }
+    return { color: 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400', txt: 'OK' }
   }
 
   function estadoVencimiento(p) {
     const dias = diasParaVencer(p.fecha_vencimiento)
     if (dias === null) return null
-    if (dias < 0) return { color: 'bg-red-50 text-red-600', txt: 'Vencido' }
-    if (dias <= 30) return { color: 'bg-amber-50 text-amber-700', txt: 'Vence ' + dias + 'd' }
+    if (dias < 0) return { color: 'bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400', txt: 'Vencido' }
+    if (dias <= 30) return { color: 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400', txt: 'Vence ' + dias + 'd' }
     return null
   }
 
@@ -150,16 +150,14 @@ export default function Productos() {
 
   return (
     <div className="pb-6">
-      {/* Header de sección */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold text-gray-800">Productos</h1>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">Productos</h1>
           <span className="text-xs text-gray-400 font-medium">
             {productos.length} en total
           </span>
         </div>
 
-        {/* Buscador con botón de escanear */}
         <div className="flex gap-2 mb-3">
           <div className="flex-1 relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -170,7 +168,7 @@ export default function Productos() {
               placeholder="Buscar producto..."
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
-              className="w-full pl-10 pr-3 py-3 rounded-xl bg-gray-50 border border-transparent text-base focus:outline-none focus:bg-white focus:border-barrio-500"
+              className="w-full pl-10 pr-3 py-3 rounded-xl bg-gray-50 dark:bg-stone-900 border border-transparent text-gray-800 dark:text-gray-100 text-base focus:outline-none focus:bg-white dark:focus:bg-stone-900 focus:border-barrio-500"
             />
           </div>
           <button
@@ -182,13 +180,12 @@ export default function Productos() {
           </button>
         </div>
 
-        {/* Alertas como chips compactos */}
         {(totalPorVencer > 0 || totalReponer > 0) && (
           <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
             {totalReponer > 0 && (
               <button
                 onClick={() => { setSoloPorVencer(false); setCategoriaFiltro('Todas') }}
-                className="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap"
+                className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap"
               >
                 ⚠️ {totalReponer} para reponer
               </button>
@@ -200,7 +197,7 @@ export default function Productos() {
                   'px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border ' +
                   (soloPorVencer
                     ? 'bg-amber-500 text-white border-amber-500'
-                    : 'bg-amber-50 text-amber-700 border-amber-200')
+                    : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900')
                 }
               >
                 📅 {totalPorVencer} por vencer
@@ -209,7 +206,6 @@ export default function Productos() {
           </div>
         )}
 
-        {/* Filtros por categoría */}
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
           {categorias.map(cat => (
             <button
@@ -218,8 +214,8 @@ export default function Productos() {
               className={
                 'px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ' +
                 (categoriaFiltro === cat
-                  ? 'bg-gray-800 text-white'
-                  : 'bg-gray-100 text-gray-600')
+                  ? 'bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900'
+                  : 'bg-gray-100 dark:bg-stone-900 text-gray-600 dark:text-gray-300')
               }
             >
               {cat}
@@ -228,28 +224,26 @@ export default function Productos() {
         </div>
       </div>
 
-      {/* Mensaje flotante */}
       {mensaje && (
         <div className="px-4 mb-3">
           <div className={
-            'rounded-xl p-3 text-sm ' +
+            'rounded-xl p-3 text-sm border ' +
             (mensaje.tipo === 'error'
-              ? 'bg-red-50 text-red-700 border border-red-200'
-              : 'bg-emerald-50 text-emerald-700 border border-emerald-200')
+              ? 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900'
+              : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900')
           }>
             {mensaje.txt}
           </div>
         </div>
       )}
 
-      {/* Lista de productos */}
       <div className="px-4">
         {cargando && (
           <div className="text-center text-gray-400 py-12">Cargando...</div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-xl p-4 text-red-700 dark:text-red-300">
             <p className="font-semibold mb-1">Error</p>
             <p className="text-sm">{error}</p>
           </div>
@@ -258,7 +252,7 @@ export default function Productos() {
         {!cargando && !error && filtrados.length === 0 && (
           <div className="text-center py-12">
             <p className="text-4xl mb-2">📦</p>
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-gray-400">
               {busqueda ? 'Sin resultados' : 'No hay productos todavia'}
             </p>
           </div>
@@ -270,7 +264,7 @@ export default function Productos() {
               <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                 {cat}
               </h2>
-              <span className="text-xs text-gray-300">
+              <span className="text-xs text-gray-300 dark:text-gray-600">
                 {grupos[cat].length}
               </span>
             </div>
@@ -280,19 +274,18 @@ export default function Productos() {
                 const est = estadoStock(p)
                 const ven = estadoVencimiento(p)
                 return (
-                  <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                    {/* Fila superior: nombre, precio, estado */}
+                  <div key={p.id} className="bg-white dark:bg-stone-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-stone-800">
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div
                         onClick={() => navigate('/editar/' + p.id)}
                         className="flex-1 min-w-0 cursor-pointer"
                       >
-                        <p className="font-semibold text-gray-800 truncate">
+                        <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">
                           {p.nombre}
                         </p>
-                        <p className="text-sm text-gray-500 mt-0.5">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                           ${Number(p.precio).toLocaleString('es-AR')}
-                          <span className="text-gray-400"> / {p.unidad}</span>
+                          <span className="text-gray-400 dark:text-gray-500"> / {p.unidad}</span>
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1">
@@ -307,24 +300,23 @@ export default function Productos() {
                       </div>
                     </div>
 
-                    {/* Fila inferior: stock con +/-, y acciones */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => cambiarStock(p, -1)}
-                          className="w-9 h-9 rounded-full bg-gray-50 text-gray-600 text-lg font-medium active:bg-gray-100"
+                          className="w-9 h-9 rounded-full bg-gray-50 dark:bg-stone-800 text-gray-600 dark:text-gray-300 text-lg font-medium active:bg-gray-100 dark:active:bg-stone-700"
                         >
                           −
                         </button>
-                        <span className="font-bold text-gray-800 text-base min-w-[60px] text-center">
+                        <span className="font-bold text-gray-800 dark:text-gray-100 text-base min-w-[60px] text-center">
                           {Number(p.stock_actual)}
-                          <span className="text-xs text-gray-400 font-normal ml-1">
+                          <span className="text-xs text-gray-400 dark:text-gray-500 font-normal ml-1">
                             {p.unidad}
                           </span>
                         </span>
                         <button
                           onClick={() => cambiarStock(p, 1)}
-                          className="w-9 h-9 rounded-full bg-gray-50 text-gray-600 text-lg font-medium active:bg-gray-100"
+                          className="w-9 h-9 rounded-full bg-gray-50 dark:bg-stone-800 text-gray-600 dark:text-gray-300 text-lg font-medium active:bg-gray-100 dark:active:bg-stone-700"
                         >
                           +
                         </button>
@@ -333,13 +325,13 @@ export default function Productos() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => abrirReponer(p)}
-                          className="text-xs font-semibold text-barrio-600 px-3 py-2 rounded-lg"
+                          className="text-xs font-semibold text-barrio-600 dark:text-barrio-500 px-3 py-2 rounded-lg"
                         >
                           Reponer
                         </button>
                         <button
                           onClick={() => eliminar(p)}
-                          className="text-gray-300 text-lg px-1"
+                          className="text-gray-300 dark:text-gray-600 text-lg px-1"
                         >
                           ×
                         </button>
@@ -353,7 +345,6 @@ export default function Productos() {
         ))}
       </div>
 
-      {/* Modal de reponer */}
       {escaneando && (
         <Escaner
           onDetectado={alEscanearReponer}
@@ -363,12 +354,14 @@ export default function Productos() {
 
       {reponiendo && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <p className="font-bold text-lg mb-1 text-gray-800">{reponiendo.nombre}</p>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="bg-white dark:bg-stone-900 rounded-2xl p-6 w-full max-w-sm">
+            <p className="font-bold text-lg mb-1 text-gray-800 dark:text-gray-100">
+              {reponiendo.nombre}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Stock actual: {Number(reponiendo.stock_actual)} {reponiendo.unidad}
             </p>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">
+            <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
               ¿Cuántas unidades llegaron?
             </label>
             <input
@@ -379,17 +372,17 @@ export default function Productos() {
               onChange={e => setCantidad(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && confirmarReponer()}
               placeholder="0"
-              className="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-2xl font-bold text-center mb-4 focus:outline-none focus:border-barrio-500"
+              className="w-full p-3 rounded-xl bg-gray-50 dark:bg-stone-950 border border-gray-200 dark:border-stone-800 text-gray-800 dark:text-gray-100 text-2xl font-bold text-center mb-4 focus:outline-none focus:border-barrio-500"
             />
             {cantidad && Number(cantidad) > 0 && (
-              <p className="text-center text-sm text-emerald-600 mb-3 font-medium">
+              <p className="text-center text-sm text-emerald-600 dark:text-emerald-400 mb-3 font-medium">
                 Nuevo stock: {(Number(reponiendo.stock_actual) + Number(cantidad))} {reponiendo.unidad}
               </p>
             )}
             <div className="flex gap-2">
               <button
                 onClick={() => setReponiendo(null)}
-                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold"
+                className="flex-1 bg-gray-100 dark:bg-stone-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-semibold"
               >
                 Cancelar
               </button>
