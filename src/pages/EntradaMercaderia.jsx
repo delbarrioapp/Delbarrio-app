@@ -95,18 +95,25 @@ export default function EntradaMercaderia() {
   )
 
   return (
-    <div className="p-4 max-w-2xl mx-auto pb-44">
-      <h1 className="text-2xl font-bold mb-4 text-barrio-700">Entrada de mercaderia</h1>
+    <div className="px-4 pt-5 pb-44">
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        Entrada de mercaderia
+      </h1>
 
       {mensaje && (
-        <div className={'rounded-xl p-3 mb-3 text-sm ' + (mensaje.tipo === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200')}>
+        <div className={
+          'rounded-xl p-3 mb-3 text-sm border ' +
+          (mensaje.tipo === 'error'
+            ? 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900'
+            : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900')
+        }>
           {mensaje.txt}
         </div>
       )}
 
       <button
         onClick={() => setEscaneando(true)}
-        className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg mb-3"
+        className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg mb-3 active:scale-[0.98] transition-transform"
       >
         📷 Escanear producto
       </button>
@@ -116,46 +123,50 @@ export default function EntradaMercaderia() {
         placeholder="O buscar por nombre..."
         value={busqueda}
         onChange={e => setBusqueda(e.target.value)}
-        className="w-full p-3 rounded-xl border border-gray-200 mb-3 text-lg"
+        className="w-full p-3 rounded-xl bg-gray-50 dark:bg-stone-900 border border-transparent text-gray-800 dark:text-gray-100 text-base mb-3 focus:outline-none focus:bg-white dark:focus:bg-stone-900 focus:border-barrio-500"
       />
 
       {cargando ? (
-        <p className="text-center text-gray-500 py-8">Cargando...</p>
+        <div className="text-center text-gray-400 py-12">Cargando...</div>
       ) : busqueda && filtrados.length > 0 ? (
         <div className="space-y-2 mb-4">
           {filtrados.slice(0, 10).map(p => (
             <button
               key={p.id}
               onClick={() => seleccionarProducto(p)}
-              className="w-full bg-white rounded-xl p-3 flex justify-between items-center shadow-sm text-left"
+              className="w-full bg-white dark:bg-stone-900 rounded-xl p-3 flex justify-between items-center shadow-sm border border-gray-100 dark:border-stone-800 text-left"
             >
-              <div>
-                <p className="font-semibold text-gray-800 text-sm">{p.nombre}</p>
-                <p className="text-xs text-gray-500">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">
+                  {p.nombre}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   stock: {Number(p.stock_actual)} {p.unidad}
                 </p>
               </div>
-              <span className="text-barrio-500 font-bold text-xl">+</span>
+              <span className="text-barrio-500 font-bold text-xl ml-2">+</span>
             </button>
           ))}
         </div>
       ) : null}
 
       {lista.length > 0 && (
-        <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-2xl p-4 mb-4 shadow-sm border border-gray-100 dark:border-stone-800">
           <div className="flex justify-between items-center mb-3">
-            <p className="font-bold text-gray-700">
+            <p className="font-bold text-gray-700 dark:text-gray-200">
               Por ingresar ({lista.length})
             </p>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               {totalUnidades} unidades
             </span>
           </div>
           {lista.map(item => (
-            <div key={item.id} className="flex items-center gap-2 py-2 border-b last:border-b-0">
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-800">{item.nombre}</p>
-                <p className="text-xs text-gray-500">
+            <div key={item.id} className="flex items-center gap-2 py-2 border-b border-gray-100 dark:border-stone-800 last:border-b-0">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+                  {item.nombre}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {Number(item.stock_actual)} → {Number(item.stock_actual) + Number(item.cantidad)} {item.unidad}
                 </p>
               </div>
@@ -164,11 +175,11 @@ export default function EntradaMercaderia() {
                 step="0.001"
                 value={item.cantidad}
                 onChange={e => editarCantidad(item.id, e.target.value)}
-                className="w-20 p-2 rounded-lg border border-gray-200 text-center font-bold"
+                className="w-20 p-2 rounded-lg bg-gray-50 dark:bg-stone-950 border border-gray-200 dark:border-stone-800 text-gray-800 dark:text-gray-100 text-center font-bold focus:outline-none focus:border-barrio-500"
               />
               <button
                 onClick={() => quitarItem(item.id)}
-                className="text-red-500 text-xl"
+                className="text-red-500 text-xl px-1"
               >
                 ✕
               </button>
@@ -181,7 +192,7 @@ export default function EntradaMercaderia() {
         <button
           onClick={confirmarEntrada}
           disabled={confirmando}
-          className="fixed bottom-20 left-4 right-4 max-w-2xl mx-auto bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg disabled:opacity-50"
+          className="fixed bottom-6 left-4 right-4 max-w-2xl mx-auto bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 active:scale-[0.98] transition-transform"
         >
           {confirmando ? 'Guardando...' : 'Confirmar entrada (' + lista.length + ')'}
         </button>
@@ -195,13 +206,15 @@ export default function EntradaMercaderia() {
       )}
 
       {seleccionado && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <p className="font-bold text-lg mb-1">{seleccionado.nombre}</p>
-            <p className="text-sm text-gray-500 mb-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-stone-900 rounded-2xl p-6 w-full max-w-sm">
+            <p className="font-bold text-lg mb-1 text-gray-800 dark:text-gray-100">
+              {seleccionado.nombre}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Stock actual: {Number(seleccionado.stock_actual)} {seleccionado.unidad}
             </p>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               ¿Cuántas unidades llegaron?
             </label>
             <input
@@ -212,19 +225,19 @@ export default function EntradaMercaderia() {
               onChange={e => setCantidad(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && confirmarCantidad()}
               placeholder="0"
-              className="w-full p-3 rounded-xl border border-gray-200 text-2xl font-bold text-center mb-4"
+              className="w-full p-3 rounded-xl bg-gray-50 dark:bg-stone-950 border border-gray-200 dark:border-stone-800 text-gray-800 dark:text-gray-100 text-2xl font-bold text-center mb-4 focus:outline-none focus:border-barrio-500"
             />
             <div className="flex gap-2">
               <button
                 onClick={() => setSeleccionado(null)}
-                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold"
+                className="flex-1 bg-gray-100 dark:bg-stone-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-semibold"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmarCantidad}
                 disabled={!cantidad || Number(cantidad) <= 0}
-                className="flex-1 bg-barrio-500 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                className="flex-1 bg-barrio-500 text-white py-3 rounded-xl font-bold disabled:opacity-40"
               >
                 Agregar
               </button>

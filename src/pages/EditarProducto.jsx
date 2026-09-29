@@ -26,6 +26,7 @@ export default function EditarProducto() {
       stock_minimo: data.stock_minimo,
       unidad: data.unidad,
       categoria: data.categoria || '',
+      codigo_barras: data.codigo_barras || '',
       fecha_vencimiento: data.fecha_vencimiento || ''
     })
   }
@@ -47,6 +48,7 @@ export default function EditarProducto() {
         stock_minimo: Number(form.stock_minimo) || 0,
         unidad: form.unidad,
         categoria: form.categoria.trim() || 'Sin categoria',
+        codigo_barras: form.codigo_barras.trim() || null,
         fecha_vencimiento: form.fecha_vencimiento || null
       })
       navigate('/')
@@ -66,10 +68,12 @@ export default function EditarProducto() {
     }
   }
 
+  const inputClass = "w-full p-3 rounded-xl bg-gray-50 dark:bg-stone-900 border border-gray-200 dark:border-stone-800 text-gray-800 dark:text-gray-100 text-base focus:outline-none focus:bg-white dark:focus:bg-stone-900 focus:border-barrio-500"
+
   if (error && !form) {
     return (
       <div className="p-4">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-xl p-4 text-red-700 dark:text-red-300">
           {error}
         </div>
       </div>
@@ -77,12 +81,16 @@ export default function EditarProducto() {
   }
 
   if (!form) {
-    return <p className="p-4 text-center text-gray-500">Cargando...</p>
+    return (
+      <div className="text-center text-gray-400 py-12">Cargando...</div>
+    )
   }
 
   return (
-    <div className="p-4 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-barrio-700">Editar producto</h1>
+    <div className="px-4 pt-5 pb-24">
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        Editar producto
+      </h1>
 
       <form onSubmit={guardar} className="space-y-3">
         <input
@@ -90,7 +98,15 @@ export default function EditarProducto() {
           placeholder="Nombre"
           value={form.nombre}
           onChange={e => cambiar('nombre', e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-200 text-lg"
+          className={inputClass}
+        />
+
+        <input
+          type="text"
+          placeholder="Codigo de barras"
+          value={form.codigo_barras}
+          onChange={e => cambiar('codigo_barras', e.target.value)}
+          className={inputClass}
         />
 
         <input
@@ -99,7 +115,7 @@ export default function EditarProducto() {
           value={form.categoria}
           onChange={e => cambiar('categoria', e.target.value)}
           list="categorias-sugeridas"
-          className="w-full p-3 rounded-xl border border-gray-200 text-lg"
+          className={inputClass}
         />
         <datalist id="categorias-sugeridas">
           <option value="Bebidas" />
@@ -122,7 +138,7 @@ export default function EditarProducto() {
           placeholder="Precio"
           value={form.precio}
           onChange={e => cambiar('precio', e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-200 text-lg"
+          className={inputClass}
         />
 
         <div className="flex gap-3">
@@ -132,7 +148,7 @@ export default function EditarProducto() {
             placeholder="Stock actual"
             value={form.stock_actual}
             onChange={e => cambiar('stock_actual', e.target.value)}
-            className="flex-1 p-3 rounded-xl border border-gray-200 text-lg"
+            className={inputClass}
           />
           <input
             type="number"
@@ -140,14 +156,14 @@ export default function EditarProducto() {
             placeholder="Stock minimo"
             value={form.stock_minimo}
             onChange={e => cambiar('stock_minimo', e.target.value)}
-            className="flex-1 p-3 rounded-xl border border-gray-200 text-lg"
+            className={inputClass}
           />
         </div>
 
         <select
           value={form.unidad}
           onChange={e => cambiar('unidad', e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-200 text-lg bg-white"
+          className={inputClass}
         >
           <option value="unidad">Unidad</option>
           <option value="kg">Kilogramo</option>
@@ -157,17 +173,19 @@ export default function EditarProducto() {
         </select>
 
         <div>
-          <label className="text-sm text-gray-600 block mb-1">Fecha de vencimiento</label>
+          <label className="text-sm text-gray-600 dark:text-gray-400 block mb-1 ml-1">
+            Fecha de vencimiento
+          </label>
           <input
             type="date"
             value={form.fecha_vencimiento}
             onChange={e => cambiar('fecha_vencimiento', e.target.value)}
-            className="w-full p-3 rounded-xl border border-gray-200 text-lg"
+            className={inputClass}
           />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm">
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-xl p-3 text-red-700 dark:text-red-300 text-sm">
             {error}
           </div>
         )}
@@ -175,7 +193,7 @@ export default function EditarProducto() {
         <button
           type="submit"
           disabled={guardando}
-          className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50"
+          className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-40 active:scale-[0.98] transition-transform"
         >
           {guardando ? 'Guardando...' : 'Guardar cambios'}
         </button>
@@ -183,7 +201,7 @@ export default function EditarProducto() {
         <button
           type="button"
           onClick={eliminar}
-          className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-semibold"
+          className="w-full bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 py-3 rounded-xl font-semibold"
         >
           Borrar producto
         </button>

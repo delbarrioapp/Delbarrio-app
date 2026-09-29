@@ -46,9 +46,13 @@ export default function NuevoProducto() {
     setGuardando(false)
   }
 
+  const inputClass = "w-full p-3 rounded-xl bg-gray-50 dark:bg-stone-900 border border-gray-200 dark:border-stone-800 text-gray-800 dark:text-gray-100 text-base focus:outline-none focus:bg-white dark:focus:bg-stone-900 focus:border-barrio-500"
+
   return (
-    <div className="p-4 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-barrio-700">Nuevo producto</h1>
+    <div className="px-4 pt-5 pb-24">
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        Nuevo producto
+      </h1>
 
       <form onSubmit={guardar} className="space-y-3">
         <input
@@ -56,7 +60,7 @@ export default function NuevoProducto() {
           placeholder="Nombre del producto"
           value={form.nombre}
           onChange={e => cambiar('nombre', e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-200 text-lg"
+          className={inputClass}
         />
 
         <div className="flex gap-2">
@@ -65,7 +69,7 @@ export default function NuevoProducto() {
             placeholder="Codigo de barras"
             value={form.codigo_barras}
             onChange={e => cambiar('codigo_barras', e.target.value)}
-            className="flex-1 p-3 rounded-xl border border-gray-200 text-lg"
+            className={inputClass}
           />
           <button
             type="button"
@@ -82,7 +86,7 @@ export default function NuevoProducto() {
           value={form.categoria}
           onChange={e => cambiar('categoria', e.target.value)}
           list="categorias-sugeridas"
-          className="w-full p-3 rounded-xl border border-gray-200 text-lg"
+          className={inputClass}
         />
         <datalist id="categorias-sugeridas">
           <option value="Bebidas" />
@@ -105,7 +109,7 @@ export default function NuevoProducto() {
           placeholder="Precio"
           value={form.precio}
           onChange={e => cambiar('precio', e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-200 text-lg"
+          className={inputClass}
         />
 
         <div className="flex gap-3">
@@ -115,7 +119,7 @@ export default function NuevoProducto() {
             placeholder="Stock actual"
             value={form.stock_actual}
             onChange={e => cambiar('stock_actual', e.target.value)}
-            className="flex-1 p-3 rounded-xl border border-gray-200 text-lg"
+            className={inputClass}
           />
           <input
             type="number"
@@ -123,14 +127,14 @@ export default function NuevoProducto() {
             placeholder="Stock minimo"
             value={form.stock_minimo}
             onChange={e => cambiar('stock_minimo', e.target.value)}
-            className="flex-1 p-3 rounded-xl border border-gray-200 text-lg"
+            className={inputClass}
           />
         </div>
 
         <select
           value={form.unidad}
           onChange={e => cambiar('unidad', e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-200 text-lg bg-white"
+          className={inputClass}
         >
           <option value="unidad">Unidad</option>
           <option value="kg">Kilogramo</option>
@@ -140,17 +144,19 @@ export default function NuevoProducto() {
         </select>
 
         <div>
-          <label className="text-sm text-gray-600 block mb-1">Fecha de vencimiento (opcional)</label>
+          <label className="text-sm text-gray-600 dark:text-gray-400 block mb-1 ml-1">
+            Fecha de vencimiento (opcional)
+          </label>
           <input
             type="date"
             value={form.fecha_vencimiento}
             onChange={e => cambiar('fecha_vencimiento', e.target.value)}
-            className="w-full p-3 rounded-xl border border-gray-200 text-lg"
+            className={inputClass}
           />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm">
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-xl p-3 text-red-700 dark:text-red-300 text-sm">
             {error}
           </div>
         )}
@@ -158,7 +164,7 @@ export default function NuevoProducto() {
         <button
           type="submit"
           disabled={guardando}
-          className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50"
+          className="w-full bg-barrio-500 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-40 active:scale-[0.98] transition-transform"
         >
           {guardando ? 'Guardando...' : 'Guardar producto'}
         </button>

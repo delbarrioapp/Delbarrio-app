@@ -4,7 +4,7 @@ import { listarProductos, guardarVenta } from '../lib/api'
 import Escaner from '../components/Escaner'
 
 const METODOS = [
-  { id: 'efectivo', label: 'Efectivo', color: 'bg-green-500' },
+  { id: 'efectivo', label: 'Efectivo', color: 'bg-emerald-500' },
   { id: 'transferencia', label: 'Transferencia', color: 'bg-blue-500' },
   { id: 'mercadopago', label: 'Mercado Pago', color: 'bg-cyan-500' },
   { id: 'tarjeta', label: 'Tarjeta', color: 'bg-purple-500' }
@@ -108,41 +108,48 @@ export default function Vender() {
   })
 
   return (
-    <div className="p-4 max-w-2xl mx-auto pb-40">
-      <h1 className="text-2xl font-bold mb-4 text-barrio-700">Vender</h1>
+    <div className="px-4 pt-5 pb-40">
+      <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        Vender
+      </h1>
 
       {mensaje && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-3 text-green-700 text-sm">
+        <div className="bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3 mb-3 text-emerald-700 dark:text-emerald-300 text-sm">
           {mensaje}
         </div>
       )}
 
       <div className="flex gap-2 mb-3">
-        <input
-          type="text"
-          placeholder="Buscar o escanear..."
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-          className="flex-1 p-3 rounded-xl border border-gray-200 text-lg"
-        />
+        <div className="flex-1 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            🔍
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar o escanear..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            className="w-full pl-10 pr-3 py-3 rounded-xl bg-gray-50 dark:bg-stone-900 border border-transparent text-gray-800 dark:text-gray-100 text-base focus:outline-none focus:bg-white dark:focus:bg-stone-900 focus:border-barrio-500"
+          />
+        </div>
         <button
           onClick={() => setEscaneando(true)}
-          className="bg-barrio-500 text-white px-4 rounded-xl font-bold text-2xl"
+          className="bg-barrio-500 text-white px-4 rounded-xl text-xl"
         >
           📷
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-3 mb-2">
+      <div className="flex gap-2 overflow-x-auto pb-3 mb-2 -mx-4 px-4">
         {categorias.map(cat => (
           <button
             key={cat}
             onClick={() => setCategoriaFiltro(cat)}
             className={
-              'px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap ' +
+              'px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ' +
               (categoriaFiltro === cat
-                ? 'bg-barrio-500 text-white'
-                : 'bg-white text-gray-600 border border-gray-200')
+                ? 'bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900'
+                : 'bg-gray-100 dark:bg-stone-900 text-gray-600 dark:text-gray-300')
             }
           >
             {cat}
@@ -151,40 +158,49 @@ export default function Vender() {
       </div>
 
       {cargando ? (
-        <p className="text-center text-gray-500 py-8">Cargando...</p>
+        <div className="text-center text-gray-400 py-12">Cargando...</div>
       ) : filtrados.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">
-          No se encontraron productos.
-        </p>
+        <div className="text-center py-12">
+          <p className="text-4xl mb-2">🔍</p>
+          <p className="text-gray-500 dark:text-gray-400">Sin resultados</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {filtrados.map(p => (
             <button
               key={p.id}
               onClick={() => agregar(p)}
-              className="w-full bg-white rounded-xl p-4 flex justify-between items-center shadow-sm text-left"
+              className="w-full bg-white dark:bg-stone-900 rounded-2xl p-4 flex justify-between items-center shadow-sm border border-gray-100 dark:border-stone-800 text-left active:scale-[0.99] transition-transform"
             >
-              <div>
-                <p className="font-semibold text-gray-800">{p.nombre}</p>
-                <p className="text-sm text-gray-500">
-                  ${Number(p.precio).toLocaleString('es-AR')} — stock {Number(p.stock_actual)} {p.unidad}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">
+                  {p.nombre}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  ${Number(p.precio).toLocaleString('es-AR')}
+                  <span className="text-gray-400"> — stock {Number(p.stock_actual)} {p.unidad}</span>
                 </p>
               </div>
-              <span className="text-2xl text-barrio-500 font-bold">+</span>
+              <span className="text-2xl text-barrio-500 font-bold ml-2">+</span>
             </button>
           ))}
         </div>
       )}
 
       {carrito.length > 0 && (
-        <div className="fixed bottom-16 left-0 right-0 bg-white border-t shadow-lg p-4 max-h-96 overflow-y-auto">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-stone-900 border-t border-gray-100 dark:border-stone-800 shadow-2xl p-4 max-h-96 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
-            <p className="font-bold text-gray-700 mb-2">Carrito</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Carrito
+            </p>
             {carrito.map(i => (
-              <div key={i.id} className="flex justify-between items-center py-1">
-                <span className="text-sm">{i.nombre} x {i.cantidad}</span>
+              <div key={i.id} className="flex justify-between items-center py-1.5">
+                <span className="text-sm text-gray-700 dark:text-gray-200 truncate mr-2">
+                  {i.nombre}
+                  <span className="text-gray-400"> × {i.cantidad}</span>
+                </span>
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold">
+                  <span className="font-semibold text-gray-800 dark:text-gray-100">
                     ${(Number(i.precio) * i.cantidad).toLocaleString('es-AR')}
                   </span>
                   <button
@@ -196,13 +212,13 @@ export default function Vender() {
                 </div>
               </div>
             ))}
-            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-              <span className="font-bold text-lg">
+            <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100 dark:border-stone-800">
+              <span className="font-bold text-lg text-gray-800 dark:text-gray-100">
                 Total: ${total.toLocaleString('es-AR')}
               </span>
               <button
                 onClick={() => setMostrarMetodos(true)}
-                className="bg-barrio-500 text-white px-6 py-3 rounded-xl font-bold"
+                className="bg-barrio-500 text-white px-6 py-3 rounded-xl font-bold active:scale-95 transition-transform"
               >
                 COBRAR
               </button>
@@ -212,15 +228,17 @@ export default function Vender() {
       )}
 
       {mostrarMetodos && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
-          <div className="bg-white w-full rounded-t-2xl p-4">
-            <p className="text-lg font-bold mb-3 text-center">¿Cómo paga?</p>
+        <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+          <div className="bg-white dark:bg-stone-900 w-full rounded-t-2xl p-4">
+            <p className="text-lg font-bold mb-3 text-center text-gray-800 dark:text-gray-100">
+              ¿Cómo paga?
+            </p>
             <div className="grid grid-cols-2 gap-3 mb-3">
               {METODOS.map(m => (
                 <button
                   key={m.id}
                   onClick={() => cobrarCon(m.id)}
-                  className={m.color + ' text-white py-5 rounded-xl font-bold text-lg'}
+                  className={m.color + ' text-white py-5 rounded-xl font-bold text-lg active:scale-95 transition-transform'}
                 >
                   {m.label}
                 </button>
@@ -228,7 +246,7 @@ export default function Vender() {
             </div>
             <button
               onClick={() => setMostrarMetodos(false)}
-              className="w-full bg-gray-100 text-gray-600 py-3 rounded-xl font-semibold"
+              className="w-full bg-gray-100 dark:bg-stone-800 text-gray-600 dark:text-gray-300 py-3 rounded-xl font-semibold"
             >
               Cancelar
             </button>

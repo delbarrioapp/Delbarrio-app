@@ -7,12 +7,14 @@ import Ventas from './pages/Ventas'
 import CierreCaja from './pages/CierreCaja'
 import EntradaMercaderia from './pages/EntradaMercaderia'
 import ListaCompras from './pages/ListaCompras'
+import Reportes from './pages/Reportes'
 import Ticket from './pages/Ticket'
 import EditarProducto from './pages/EditarProducto'
 
 const MENU = [
   { to: '/', label: 'Stock', icon: '📦' },
   { to: '/ventas', label: 'Ventas de hoy', icon: '📊' },
+  { to: '/reportes', label: 'Reportes', icon: '📈' },
   { to: '/entrada', label: 'Entrada mercaderia', icon: '📥' },
   { to: '/lista', label: 'Lista de compras', icon: '📝' },
   { to: '/cierre', label: 'Cierre de caja', icon: '💵' },
@@ -25,10 +27,10 @@ function MenuLateral({ abierto, cerrar }) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/50" onClick={cerrar}></div>
-      <div className="w-72 bg-white h-full shadow-lg overflow-y-auto">
-        <div className="p-4 border-b flex justify-between items-center">
-          <span className="font-bold text-barrio-700">Menu</span>
-          <button onClick={cerrar} className="text-2xl text-gray-500 leading-none">×</button>
+      <div className="w-72 bg-white dark:bg-stone-900 h-full shadow-lg overflow-y-auto">
+        <div className="p-4 border-b border-gray-100 dark:border-stone-800 flex justify-between items-center">
+          <span className="font-bold text-barrio-700 dark:text-barrio-500">Menu</span>
+          <button onClick={cerrar} className="text-2xl text-gray-500 dark:text-gray-400 leading-none">×</button>
         </div>
         <div className="py-2">
           {MENU.map(m => (
@@ -39,8 +41,8 @@ function MenuLateral({ abierto, cerrar }) {
               className={
                 'flex items-center gap-3 px-4 py-4 text-base ' +
                 (pathname === m.to
-                  ? 'bg-orange-50 text-barrio-700 font-semibold'
-                  : 'text-gray-700')
+                  ? 'bg-orange-50 dark:bg-stone-800 text-barrio-700 dark:text-barrio-500 font-semibold'
+                  : 'text-gray-700 dark:text-gray-300')
               }
             >
               <span className="text-2xl">{m.icon}</span>
@@ -72,11 +74,18 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        <header className="bg-white border-b shadow-sm px-4 py-3 relative">
+      <div className="min-h-screen flex flex-col bg-stone-50 dark:bg-stone-950">
+        <header className="bg-white dark:bg-stone-900 border-b border-gray-100 dark:border-stone-800 shadow-sm px-4 py-3 relative">
+          <Link
+            to="/"
+            className="absolute top-5 left-4 text-2xl text-gray-600 dark:text-gray-300 z-10"
+            title="Buscar"
+          >
+            🔍
+          </Link>
           <button
             onClick={() => setMenuAbierto(true)}
-            className="absolute top-4 right-4 text-3xl text-gray-600 leading-none z-10"
+            className="absolute top-4 right-4 text-3xl text-gray-600 dark:text-gray-300 leading-none z-10"
           >
             ☰
           </button>
@@ -95,6 +104,7 @@ export default function App() {
             <Route path="/entrada" element={<EntradaMercaderia />} />
             <Route path="/lista" element={<ListaCompras />} />
             <Route path="/ventas" element={<Ventas />} />
+            <Route path="/reportes" element={<Reportes />} />
             <Route path="/cierre" element={<CierreCaja />} />
             <Route path="/nuevo" element={<NuevoProducto />} />
             <Route path="/ticket/:id" element={<Ticket />} />
