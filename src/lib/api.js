@@ -57,8 +57,10 @@ export async function ajustarStock(id, delta) {
   return data
 }
 
-export async function guardarVenta(items, metodoPago) {
-  const total = items.reduce((s, i) => s + Number(i.precio) * i.cantidad, 0)
+export async function guardarVenta(items, metodoPago, totalFinal, descuentos) {
+  const total = totalFinal !== undefined
+    ? totalFinal
+    : items.reduce((s, i) => s + Number(i.precio) * i.cantidad, 0)
 
   const { data: venta, error } = await supabase
     .from('ventas')
@@ -133,7 +135,6 @@ export async function listarCierres() {
   return data || []
 }
 
-
 export async function listarPromos() {
   const { data, error } = await supabase
     .from('promos')
@@ -145,13 +146,14 @@ export async function listarPromos() {
 }
 
 export async function crearPromo(promo) {
-  const { data, error } = await supabase
-    .from('promos')
-    .insert(promo)
-    .select()
-    .single()
+  const { data, error } = await supabase.rpc('crear_promo', {
+    p_nombre: promo.nombre,
+    p_tipo: promo.tipo,
+    p_config: promo.config,
+    p_fecha_hasta: promo.fecha_hasta || null
+  })
   if (error) throw error
-  return data
+  return { id: data }
 }
 
 export async function actualizarPromo(id, cambios) {
@@ -171,6 +173,105 @@ export async function borrarPromo(id) {
     .delete()
     .eq('id', id)
   if (error) throw error
+}
+
+export async function listarPromosActivas() {
+  const hoy = new Date().toISOString().split('T')[0]
+  const { data, error } = await supabase
+    .from('promos')
+    .select('*')
+    .eq('activa', true)
+    .or(`fecha_hasta.is.null,fecha_hasta.gte.${hoy}`)
+  if (error) throw error
+  return data || []
+}
+
+export function calcularDescuentos(carrito, promos) {
+  const subtotal = carrito.reduce((s, i) => s + Number(i.precio) * i.cantidad, 0)
+  const descuentos = []
+  const productosConPromo = new Set()
+
+  for (const promo of promos) {
+    if (promo.tipo !== 'combo') continue
+    const c = promo.config || {}
+    const prodsCombo = c.productos || []
+    if (prodsCombo.length === 0) continue
+    const todos = prodsCombo.every(pid => carrito.find(i => i.id === pid))
+    if (!todos) continue
+
+    let sumaNormal = 0
+    const usados = []
+    prodsCombo.forEach(pid => {
+      const item = carrito.find(i => i.id === pid)
+      if (item) {
+        sumaNormal += Number(item.precio) * item.cantidad
+        usados.push(pid)
+      }
+    })
+    const precioCombo = Number(c.precio_combo) || 0
+    if (sumaNormal > precioCombo) {
+      descuentos.push({
+        promo: promo.nombre,
+        monto: sumaNormal - precioCombo,
+        tipo: 'combo'
+      })
+      usados.forEach(id => productosConPromo.add(id))
+    }
+  }
+
+  for (const promo of promos) {
+    if (promo.tipo !== 'cantidad') continue
+    const c = promo.config || {}
+    if (productosConPromo.has(c.producto_id)) continue
+    const item = carrito.find(i => i.id === c.producto_id)
+    if (!item) continue
+    const lleva = Number(c.lleva) || 2
+    const paga = Number(c.paga) || 1
+    const grupos = Math.floor(item.cantidad / lleva)
+    if (grupos > 0) {
+      descuentos.push({
+        promo: promo.nombre,
+        monto: grupos * (lleva - paga) * Number(item.precio),
+        tipo: 'cantidad'
+      })
+      productosConPromo.add(c.producto_id)
+    }
+  }
+
+  for (const promo of promos) {
+    if (promo.tipo !== 'porcentaje') continue
+    const c = promo.config || {}
+    if (!c.categoria) continue
+    const itemsCat = carrito.filter(i =>
+      i.categoria === c.categoria && !productosConPromo.has(i.id)
+    )
+    if (itemsCat.length === 0) continue
+    const subtotalCat = itemsCat.reduce((s, i) => s + Number(i.precio) * i.cantidad, 0)
+    if (subtotalCat > 0) {
+      descuentos.push({
+        promo: promo.nombre,
+        monto: subtotalCat * (Number(c.descuento) / 100),
+        tipo: 'porcentaje'
+      })
+      itemsCat.forEach(i => productosConPromo.add(i.id))
+    }
+  }
+
+  const totalDescuento = descuentos.reduce((s, d) => s + d.monto, 0)
+  return { descuentos, totalDescuento, subtotal }
+}
+
+export async function obtenerMiLocalId() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No hay sesion')
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('local_id')
+    .eq('id', user.id)
+    .single()
+  if (error) throw error
+  if (!data?.local_id) throw new Error('No tenes local asignado')
+  return data.local_id
 }
 
 

@@ -17,7 +17,6 @@ export default function NuevaPromo() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
 
-  // Config segun tipo
   const [productoId, setProductoId] = useState('')
   const [lleva, setLleva] = useState(2)
   const [paga, setPaga] = useState(1)
@@ -57,17 +56,23 @@ export default function NuevaPromo() {
     let config = {}
     if (tipo === 'cantidad') {
       if (!productoId) return setError('Elegi el producto')
-      if (lleva < 2 || paga < 1 || paga >= lleva) {
+      if (Number(lleva) < 2 || Number(paga) < 1 || Number(paga) >= Number(lleva)) {
         return setError('Config invalida: "lleva" debe ser mayor a "paga"')
       }
       config = { producto_id: productoId, lleva: Number(lleva), paga: Number(paga) }
     } else if (tipo === 'porcentaje') {
       if (!categoria) return setError('Elegi una categoria')
-      if (descuento <= 0 || descuento >= 100) return setError('Descuento entre 1 y 99')
+      if (Number(descuento) <= 0 || Number(descuento) >= 100) {
+        return setError('Descuento entre 1 y 99')
+      }
       config = { categoria, descuento: Number(descuento) }
     } else if (tipo === 'combo') {
-      if (productosCombo.length < 2) return setError('Elegi al menos 2 productos para el combo')
-      if (!precioCombo || Number(precioCombo) <= 0) return setError('Pone un precio al combo')
+      if (productosCombo.length < 2) {
+        return setError('Elegi al menos 2 productos para el combo')
+      }
+      if (!precioCombo || Number(precioCombo) <= 0) {
+        return setError('Pone un precio al combo')
+      }
       config = { productos: productosCombo, precio_combo: Number(precioCombo) }
     }
 
@@ -77,8 +82,7 @@ export default function NuevaPromo() {
         nombre: nombre.trim(),
         tipo,
         config,
-        fecha_hasta: fechaHasta || null,
-        activa: true
+        fecha_hasta: fechaHasta || null
       })
       navigate('/promos')
     } catch (err) {
@@ -104,7 +108,6 @@ export default function NuevaPromo() {
           className={inputClass}
         />
 
-        {/* Selector de tipo */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
             Tipo de promo
@@ -131,7 +134,6 @@ export default function NuevaPromo() {
           </div>
         </div>
 
-        {/* Config segun tipo */}
         {tipo === 'cantidad' && (
           <div className="space-y-3 p-4 bg-gray-50 dark:bg-stone-900 rounded-xl">
             <select
@@ -242,7 +244,6 @@ export default function NuevaPromo() {
           </div>
         )}
 
-        {/* Vencimiento */}
         <div>
           <label className="text-sm text-gray-600 dark:text-gray-400 block mb-1 ml-1">
             Vence (opcional)
