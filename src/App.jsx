@@ -13,9 +13,14 @@ import Reportes from './pages/Reportes'
 import Ticket from './pages/Ticket'
 import EditarProducto from './pages/EditarProducto'
 import PanelAdmin from './pages/PanelAdmin'
+import Promos from './pages/Promos'
+import NuevaPromo from './pages/NuevaPromo'
+import EditarPromo from './pages/EditarPromo'
 
 const MENU_LOCAL = [
   { to: '/', label: 'Stock', icon: '📦' },
+  { to: '/vender', label: 'Vender', icon: '🛒' },
+  { to: '/promos', label: 'Promos', icon: '🎉' },
   { to: '/ventas', label: 'Ventas de hoy', icon: '📊' },
   { to: '/reportes', label: 'Reportes', icon: '📈' },
   { to: '/entrada', label: 'Entrada mercaderia', icon: '📥' },
@@ -56,7 +61,7 @@ function MenuLateral({ abierto, cerrar, esAdmin, local, cerrarSesion }) {
               to={m.to}
               onClick={cerrar}
               className={
-                'flex items-center gap-3 px-4 py-4 text-base ' +
+                'flex items-center gap-3 px-4 py-3.5 text-base ' +
                 (pathname === m.to
                   ? 'bg-orange-50 dark:bg-stone-800 text-barrio-700 dark:text-barrio-500 font-semibold'
                   : 'text-gray-700 dark:text-gray-300')
@@ -87,7 +92,8 @@ function MenuLateral({ abierto, cerrar, esAdmin, local, cerrarSesion }) {
 
 function BotonVender() {
   const { pathname } = useLocation()
-  if (pathname === '/vender') return null
+  if (pathname === '/vender' || pathname === '/promos' || pathname === '/promos/nueva') return null
+  if (pathname.startsWith('/promos/editar')) return null
   return (
     <Link
       to="/vender"
@@ -136,7 +142,7 @@ function AppAdmin({ esAdmin, local, cerrarSesion }) {
   )
 }
 
-function AppLocal({ esAdmin, local, cerrarSesion }) {
+function AppLocal({ local, cerrarSesion }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   return (
@@ -167,6 +173,9 @@ function AppLocal({ esAdmin, local, cerrarSesion }) {
         <Routes>
           <Route path="/" element={<Productos />} />
           <Route path="/vender" element={<Vender />} />
+          <Route path="/promos" element={<Promos />} />
+          <Route path="/promos/nueva" element={<NuevaPromo />} />
+          <Route path="/promos/editar/:id" element={<EditarPromo />} />
           <Route path="/entrada" element={<EntradaMercaderia />} />
           <Route path="/lista" element={<ListaCompras />} />
           <Route path="/ventas" element={<Ventas />} />
@@ -213,7 +222,7 @@ export default function App() {
     <BrowserRouter>
       {esAdmin
         ? <AppAdmin esAdmin={esAdmin} local={local} cerrarSesion={cerrarSesion} />
-        : <AppLocal esAdmin={esAdmin} local={local} cerrarSesion={cerrarSesion} />
+        : <AppLocal local={local} cerrarSesion={cerrarSesion} />
       }
     </BrowserRouter>
   )

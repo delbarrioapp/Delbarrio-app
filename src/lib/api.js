@@ -134,3 +134,43 @@ export async function listarCierres() {
 }
 
 
+export async function listarPromos() {
+  const { data, error } = await supabase
+    .from('promos')
+    .select('*')
+    .order('activa', { ascending: false })
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function crearPromo(promo) {
+  const { data, error } = await supabase
+    .from('promos')
+    .insert(promo)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function actualizarPromo(id, cambios) {
+  const { data, error } = await supabase
+    .from('promos')
+    .update(cambios)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function borrarPromo(id) {
+  const { error } = await supabase
+    .from('promos')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+
