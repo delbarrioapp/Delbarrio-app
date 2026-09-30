@@ -21,6 +21,7 @@ export default function Vender() {
   const [cargando, setCargando] = useState(true)
   const [mostrarMetodos, setMostrarMetodos] = useState(false)
   const [escaneando, setEscaneando] = useState(false)
+  const [noEncontrado, setNoEncontrado] = useState(null)
 
   useEffect(() => { cargar() }, [])
 
@@ -89,15 +90,18 @@ export default function Vender() {
       setMensaje('Agregado: ' + producto.nombre)
       setTimeout(() => setMensaje(null), 1500)
     } else {
-      setMensaje('Producto no encontrado: ' + codigo)
-      setTimeout(() => setMensaje(null), 3000)
+      setNoEncontrado(codigo)
     }
+  }
+
+  function crearProductoNuevo() {
+    navigate('/nuevo?codigo=' + encodeURIComponent(noEncontrado) + '&volver=/vender')
   }
 
   async function cobrarCon(metodo) {
     setMostrarMetodos(false)
     try {
-      const venta = await guardarVenta(carrito, metodo, total, descuentos)
+      const venta = await guardarVenta(carrito, metodo, total)
       setCarrito([])
       navigate('/ticket/' + venta.id)
     } catch (e) {
@@ -299,6 +303,37 @@ export default function Vender() {
           onDetectado={alEscanear}
           onCerrar={() => setEscaneando(false)}
         />
+      )}
+
+      {noEncontrado && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-stone-900 rounded-2xl p-6 w-full max-w-sm">
+            <p className="text-3xl text-center mb-3">📷</p>
+            <p className="font-bold text-lg text-center text-gray-800 dark:text-gray-100 mb-2">
+              Producto no encontrado
+            </p>
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 font-mono mb-4 break-all">
+              {noEncontrado}
+            </p>
+            <p className="text-center text-sm text-gray-600 dark:text-gray-300 mb-5">
+              ¿Queres cargarlo ahora?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setNoEncontrado(null)}
+                className="flex-1 bg-gray-100 dark:bg-stone-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={crearProductoNuevo}
+                className="flex-1 bg-barrio-500 text-white py-3 rounded-xl font-bold"
+              >
+                Cargar producto
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

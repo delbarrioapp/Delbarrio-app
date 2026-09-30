@@ -1,10 +1,14 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { crearProducto } from '../lib/api'
 import Escaner from '../components/Escaner'
 
 export default function NuevoProducto() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const codigoInicial = searchParams.get('codigo') || ''
+  const volverA = searchParams.get('volver') || '/'
+
   const [form, setForm] = useState({
     nombre: '',
     precio: '',
@@ -12,7 +16,7 @@ export default function NuevoProducto() {
     stock_minimo: '',
     unidad: 'unidad',
     categoria: '',
-    codigo_barras: '',
+    codigo_barras: codigoInicial,
     fecha_vencimiento: ''
   })
   const [guardando, setGuardando] = useState(false)
@@ -39,7 +43,7 @@ export default function NuevoProducto() {
         codigo_barras: form.codigo_barras.trim() || null,
         fecha_vencimiento: form.fecha_vencimiento || null
       })
-      navigate('/')
+      navigate(volverA)
     } catch (err) {
       setError(err.message)
     }
@@ -54,6 +58,14 @@ export default function NuevoProducto() {
         Nuevo producto
       </h1>
 
+      {codigoInicial && (
+        <div className="bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3 mb-4">
+          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+            📷 Codigo escaneado: {codigoInicial}
+          </p>
+        </div>
+      )}
+
       <form onSubmit={guardar} className="space-y-3">
         <input
           type="text"
@@ -61,6 +73,7 @@ export default function NuevoProducto() {
           value={form.nombre}
           onChange={e => cambiar('nombre', e.target.value)}
           className={inputClass}
+          autoFocus
         />
 
         <div className="flex gap-2">
