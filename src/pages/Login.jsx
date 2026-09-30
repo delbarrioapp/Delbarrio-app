@@ -11,6 +11,8 @@ const RUBROS = [
   { id: 'farmacia', label: 'Farmacia', icon: '💊' },
   { id: 'lubricentro', label: 'Lubricentro', icon: '🚗' },
   { id: 'rotiseria', label: 'Rotisería', icon: '🍗' },
+  { id: 'estetica', label: 'Estética', icon: '💅' },
+  { id: 'peluqueria', label: 'Peluquería', icon: '💇' },
   { id: 'otro', label: 'Otro', icon: '🏬' }
 ]
 

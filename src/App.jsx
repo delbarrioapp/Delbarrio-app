@@ -16,6 +16,7 @@ import PanelAdmin from './pages/PanelAdmin'
 import Promos from './pages/Promos'
 import NuevaPromo from './pages/NuevaPromo'
 import EditarPromo from './pages/EditarPromo'
+import ImportarProductos from './pages/ImportarProductos'
 
 const MENU_LOCAL = [
   { to: '/', label: 'Stock', icon: '📦' },
@@ -24,6 +25,7 @@ const MENU_LOCAL = [
   { to: '/ventas', label: 'Ventas de hoy', icon: '📊' },
   { to: '/reportes', label: 'Reportes', icon: '📈' },
   { to: '/entrada', label: 'Entrada mercaderia', icon: '📥' },
+  { to: '/importar', label: 'Importar Excel', icon: '📊' },
   { to: '/lista', label: 'Lista de compras', icon: '📝' },
   { to: '/cierre', label: 'Cierre de caja', icon: '💵' },
   { to: '/nuevo', label: 'Nuevo producto', icon: '➕' }
@@ -61,7 +63,7 @@ function MenuLateral({ abierto, cerrar, esAdmin, local, cerrarSesion }) {
               to={m.to}
               onClick={cerrar}
               className={
-                'flex items-center gap-3 px-4 py-3.5 text-base ' +
+                'flex items-center gap-3 px-4 py-3 text-base ' +
                 (pathname === m.to
                   ? 'bg-orange-50 dark:bg-stone-800 text-barrio-700 dark:text-barrio-500 font-semibold'
                   : 'text-gray-700 dark:text-gray-300')
@@ -92,8 +94,9 @@ function MenuLateral({ abierto, cerrar, esAdmin, local, cerrarSesion }) {
 
 function BotonVender() {
   const { pathname } = useLocation()
-  if (pathname === '/vender' || pathname === '/promos' || pathname === '/promos/nueva') return null
-  if (pathname.startsWith('/promos/editar')) return null
+  if (pathname === '/vender') return null
+  if (pathname.startsWith('/promos')) return null
+  if (pathname === '/importar') return null
   return (
     <Link
       to="/vender"
@@ -144,17 +147,20 @@ function AppAdmin({ esAdmin, local, cerrarSesion }) {
 
 function AppLocal({ local, cerrarSesion }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const { pathname } = useLocation()
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50 dark:bg-stone-950">
       <header className="bg-white dark:bg-stone-900 border-b border-gray-100 dark:border-stone-800 shadow-sm px-4 py-3 relative">
-        <Link
-          to="/"
-          className="absolute top-5 left-4 text-2xl text-gray-600 dark:text-gray-300 z-10"
-          title="Buscar"
-        >
-          🔍
-        </Link>
+        {pathname !== '/vender' && (
+          <Link
+            to="/"
+            className="absolute top-5 left-4 text-2xl text-gray-600 dark:text-gray-300 z-10"
+            title="Buscar"
+          >
+            🔍
+          </Link>
+        )}
         <button
           onClick={() => setMenuAbierto(true)}
           className="absolute top-4 right-4 text-3xl text-gray-600 dark:text-gray-300 leading-none z-10"
@@ -177,6 +183,7 @@ function AppLocal({ local, cerrarSesion }) {
           <Route path="/promos/nueva" element={<NuevaPromo />} />
           <Route path="/promos/editar/:id" element={<EditarPromo />} />
           <Route path="/entrada" element={<EntradaMercaderia />} />
+          <Route path="/importar" element={<ImportarProductos />} />
           <Route path="/lista" element={<ListaCompras />} />
           <Route path="/ventas" element={<Ventas />} />
           <Route path="/reportes" element={<Reportes />} />

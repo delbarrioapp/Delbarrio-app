@@ -269,3 +269,12 @@ export async function obtenerMiLocalId() {
 }
 
 
+export async function importarProductos(productos) {
+  const { data, error } = await supabase.rpc('importar_productos', {
+    p_productos: productos
+  })
+  if (error) throw error
+  return data
+}
+
+
