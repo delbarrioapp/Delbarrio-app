@@ -50,15 +50,16 @@ export function AuthProvider({ children }) {
     }
   }
 
-async function registrarse(email, password, nombreLocal, tipoLocal, codigoInvitacion) {
-  const { data: valido, error: errVal } = await supabase.rpc('validar_codigo_invitacion', {
-    p_codigo: codigoInvitacion
-  })
-  if (errVal) throw new Error('Error al validar codigo')
-  if (!valido) throw new Error('Codigo de invitacion invalido o agotado')
+  async function registrarse(email, password, nombreLocal, tipoLocal, codigoInvitacion) {
+    const { data: valido, error: errVal } = await supabase.rpc('validar_codigo_invitacion', {
+      p_codigo: codigoInvitacion
+    })
+    if (errVal) throw new Error('Error al validar codigo')
+    if (!valido) throw new Error('Codigo de invitacion invalido o agotado')
 
-  const { data, error } = await supabase.auth.signUp({ email, password })
-  if (error) throw error
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) throw error
+
     if (data.user) {
       const { data: localCreado, error: errLocal } = await supabase
         .from('locales')
@@ -76,6 +77,9 @@ async function registrarse(email, password, nombreLocal, tipoLocal, codigoInvita
           rol: 'dueño'
         })
       if (errUser) throw errUser
+
+      await supabase.auth.signOut()
+      await supabase.auth.signInWithPassword({ email, password })
 
       setLocal({
         ...localCreado,
