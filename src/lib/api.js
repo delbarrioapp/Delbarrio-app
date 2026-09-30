@@ -12,13 +12,18 @@ export async function listarProductos() {
 }
 
 export async function crearProducto(p) {
-  const { data, error } = await supabase
-    .from('productos')
-    .insert(p)
-    .select()
-    .single()
+  const { data, error } = await supabase.rpc('crear_producto', {
+    p_nombre: p.nombre,
+    p_precio: Number(p.precio) || 0,
+    p_stock_actual: Number(p.stock_actual) || 0,
+    p_stock_minimo: Number(p.stock_minimo) || 0,
+    p_unidad: p.unidad || 'unidad',
+    p_categoria: p.categoria || 'Sin categoria',
+    p_codigo_barras: p.codigo_barras || null,
+    p_fecha_vencimiento: p.fecha_vencimiento || null
+  })
   if (error) throw error
-  return data
+  return { id: data }
 }
 
 export async function actualizarProducto(id, cambios) {
@@ -57,37 +62,26 @@ export async function ajustarStock(id, delta) {
   return data
 }
 
-export async function guardarVenta(items, metodoPago, totalFinal, descuentos) {
+export async function guardarVenta(items, metodoPago, totalFinal) {
   const total = totalFinal !== undefined
     ? totalFinal
     : items.reduce((s, i) => s + Number(i.precio) * i.cantidad, 0)
 
-  const { data: venta, error } = await supabase
-    .from('ventas')
-    .insert({ total, metodo_pago: metodoPago })
-    .select()
-    .single()
-  if (error) throw error
-
-  const itemsData = items.map(i => ({
-    venta_id: venta.id,
+  const itemsJson = items.map(i => ({
     producto_id: i.id,
     nombre_producto: i.nombre,
-    cantidad: i.cantidad,
-    precio_unitario: i.precio,
-    subtotal: Number(i.precio) * i.cantidad
+    cantidad: Number(i.cantidad),
+    precio_unitario: Number(i.precio),
+    subtotal: Number(i.precio) * Number(i.cantidad)
   }))
 
-  const { error: errItems } = await supabase
-    .from('venta_items')
-    .insert(itemsData)
-  if (errItems) throw errItems
-
-  for (const item of items) {
-    await ajustarStock(item.id, -item.cantidad)
-  }
-
-  return venta
+  const { data, error } = await supabase.rpc('crear_venta', {
+    p_total: total,
+    p_metodo_pago: metodoPago,
+    p_items: itemsJson
+  })
+  if (error) throw error
+  return { id: data, total, metodo_pago: metodoPago }
 }
 
 export async function listarVentasHoy() {
