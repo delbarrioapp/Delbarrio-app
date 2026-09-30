@@ -50,14 +50,19 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function registrarse(email, password, nombreLocal) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) throw error
+async function registrarse(email, password, nombreLocal, tipoLocal, codigoInvitacion) {
+  const { data: valido, error: errVal } = await supabase.rpc('validar_codigo_invitacion', {
+    p_codigo: codigoInvitacion
+  })
+  if (errVal) throw new Error('Error al validar codigo')
+  if (!valido) throw new Error('Codigo de invitacion invalido o agotado')
 
+  const { data, error } = await supabase.auth.signUp({ email, password })
+  if (error) throw error
     if (data.user) {
       const { data: localCreado, error: errLocal } = await supabase
         .from('locales')
-        .insert({ nombre: nombreLocal, tipo: 'otro' })
+        .insert({ nombre: nombreLocal, tipo: tipoLocal || 'otro' })
         .select()
         .single()
       if (errLocal) throw errLocal
@@ -72,7 +77,10 @@ export function AuthProvider({ children }) {
         })
       if (errUser) throw errUser
 
-      setLocal({ ...localCreado, usuario: { id: data.user.id, nombre: nombreLocal, rol: 'dueño' } })
+      setLocal({
+        ...localCreado,
+        usuario: { id: data.user.id, nombre: nombreLocal, rol: 'dueño' }
+      })
       setEsAdmin(false)
     }
     return data
