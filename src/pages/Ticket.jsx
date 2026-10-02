@@ -27,10 +27,17 @@ export default function Ticket() {
       if (u?.user) {
         const { data: usr } = await supabase
           .from('usuarios')
-          .select('local_id, locales(nombre)')
+          .select('local_id')
           .eq('id', u.user.id)
           .single()
-        if (usr?.locales) setLocal(usr.locales)
+        if (usr?.local_id) {
+          const { data: loc } = await supabase
+            .from('locales')
+            .select('*')
+            .eq('id', usr.local_id)
+            .single()
+          if (loc) setLocal(loc)
+        }
       }
     } catch (e) {
       setError(e.message)
@@ -40,8 +47,8 @@ export default function Ticket() {
 
   function urlTicket() {
     if (!venta?.token_publico) return ''
-return window.location.origin + '/t/' + venta.token_publico
-}
+    return window.location.origin + '/t/' + venta.token_publico
+  }
 
   function enviarWhatsApp() {
     if (!venta) return
@@ -103,6 +110,12 @@ return window.location.origin + '/t/' + venta.token_publico
             <p className="text-xs opacity-90 mt-1">
               {new Date(venta.fecha).toLocaleString('es-AR')}
             </p>
+            {local?.telefono && (
+              <p className="text-xs opacity-90">📞 {local.telefono}</p>
+            )}
+            {local?.direccion && (
+              <p className="text-xs opacity-90">📍 {local.direccion}</p>
+            )}
           </div>
 
           <div className="p-4">

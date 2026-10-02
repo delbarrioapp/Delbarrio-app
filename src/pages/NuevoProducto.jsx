@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { crearProducto } from '../lib/api'
+import { crearProducto, subirFotoProducto } from '../lib/api'
 import Escaner from '../components/Escaner'
 
 export default function NuevoProducto() {
@@ -19,6 +19,8 @@ export default function NuevoProducto() {
     codigo_barras: codigoInicial,
     fecha_vencimiento: ''
   })
+  const [archivoFoto, setArchivoFoto] = useState(null)
+  const [previewFoto, setPreviewFoto] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
   const [escaneando, setEscaneando] = useState(false)
@@ -27,13 +29,32 @@ export default function NuevoProducto() {
     setForm({ ...form, [campo]: valor })
   }
 
+  function elegirFoto(e) {
+    const archivo = e.target.files?.[0]
+    if (!archivo) return
+    if (archivo.size > 5 * 1024 * 1024) {
+      setError('La foto no puede pesar mas de 5 MB')
+      return
+    }
+    setArchivoFoto(archivo)
+    setPreviewFoto(URL.createObjectURL(archivo))
+    setError(null)
+  }
+
+  function quitarFoto() {
+    setArchivoFoto(null)
+    if (previewFoto) URL.revokeObjectURL(previewFoto)
+    setPreviewFoto(null)
+  }
+
   async function guardar(e) {
     e.preventDefault()
     if (!form.nombre) return setError('Pone un nombre')
     setGuardando(true)
     setError(null)
+
     try {
-      await crearProducto({
+      const creado = await crearProducto({
         nombre: form.nombre,
         precio: Number(form.precio) || 0,
         stock_actual: Number(form.stock_actual) || 0,
@@ -43,6 +64,20 @@ export default function NuevoProducto() {
         codigo_barras: form.codigo_barras.trim() || null,
         fecha_vencimiento: form.fecha_vencimiento || null
       })
+
+      if (archivoFoto && creado?.id) {
+        try {
+          const url = await subirFotoProducto(archivoFoto, creado.id)
+          const { supabase } = await import('../lib/supabase')
+          await supabase
+            .from('productos')
+            .update({ foto_url: url })
+            .eq('id', creado.id)
+        } catch (errFoto) {
+          console.error('Error subiendo foto:', errFoto)
+        }
+      }
+
       navigate(volverA)
     } catch (err) {
       setError(err.message)
@@ -66,6 +101,56 @@ export default function NuevoProducto() {
         </div>
       )}
 
+      {/* FOTO */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2 ml-1">
+          Foto del producto
+        </label>
+        {previewFoto ? (
+          <div className="relative">
+            <img
+              src={previewFoto}
+              alt="Preview"
+              className="w-full h-48 object-cover rounded-2xl"
+            />
+            <button
+              type="button"
+              onClick={quitarFoto}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-9 h-9 font-bold"
+            >
+              ×
+            </button>
+            <label className="absolute bottom-2 right-2 bg-white dark:bg-stone-900 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer shadow">
+              Cambiar
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={elegirFoto}
+                className="hidden"
+              />
+            </label>
+          </div>
+        ) : (
+          <label className="block w-full border-2 border-dashed border-gray-200 dark:border-stone-800 rounded-2xl p-8 text-center cursor-pointer active:bg-gray-50 dark:active:bg-stone-900">
+            <p className="text-4xl mb-2">📷</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Agregar foto
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Tocala para sacar una foto o elegir de la galeria
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={elegirFoto}
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
+
       <form onSubmit={guardar} className="space-y-3">
         <input
           type="text"
@@ -73,7 +158,6 @@ export default function NuevoProducto() {
           value={form.nombre}
           onChange={e => cambiar('nombre', e.target.value)}
           className={inputClass}
-          autoFocus
         />
 
         <div className="flex gap-2">
@@ -114,6 +198,9 @@ export default function NuevoProducto() {
           <option value="Frutos secos" />
           <option value="Semillas" />
           <option value="Dietetica" />
+          <option value="Perfumes" />
+          <option value="Cremas" />
+          <option value="Maquillaje" />
         </datalist>
 
         <input

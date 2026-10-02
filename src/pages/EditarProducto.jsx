@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { actualizarProducto, borrarProducto } from '../lib/api'
+import { actualizarProducto, borrarProducto, subirFotoProducto, eliminarFotoProducto } from '../lib/api'
 
 export default function EditarProducto() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [form, setForm] = useState(null)
+  const [fotoActual, setFotoActual] = useState(null)
+  const [archivoFoto, setArchivoFoto] = useState(null)
+  const [previewFoto, setPreviewFoto] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
 
@@ -29,10 +32,35 @@ export default function EditarProducto() {
       codigo_barras: data.codigo_barras || '',
       fecha_vencimiento: data.fecha_vencimiento || ''
     })
+    setFotoActual(data.foto_url || null)
   }
 
   function cambiar(campo, valor) {
     setForm({ ...form, [campo]: valor })
+  }
+
+  function elegirFoto(e) {
+    const archivo = e.target.files?.[0]
+    if (!archivo) return
+    if (archivo.size > 5 * 1024 * 1024) {
+      setError('La foto no puede pesar mas de 5 MB')
+      return
+    }
+    setArchivoFoto(archivo)
+    setPreviewFoto(URL.createObjectURL(archivo))
+    setError(null)
+  }
+
+  function quitarFoto() {
+    setArchivoFoto(null)
+    if (previewFoto) URL.revokeObjectURL(previewFoto)
+    setPreviewFoto(null)
+  }
+
+  async function eliminarFotoActual() {
+    if (!confirm('Eliminar la foto actual?')) return
+    await eliminarFotoProducto(fotoActual)
+    setFotoActual(null)
   }
 
   async function guardar(e) {
@@ -40,7 +68,15 @@ export default function EditarProducto() {
     if (!form.nombre) return setError('Pone un nombre')
     setGuardando(true)
     setError(null)
+
     try {
+      let nuevaFotoUrl = fotoActual
+
+      if (archivoFoto) {
+        if (fotoActual) await eliminarFotoProducto(fotoActual)
+        nuevaFotoUrl = await subirFotoProducto(archivoFoto, id)
+      }
+
       await actualizarProducto(id, {
         nombre: form.nombre,
         precio: Number(form.precio) || 0,
@@ -49,7 +85,8 @@ export default function EditarProducto() {
         unidad: form.unidad,
         categoria: form.categoria.trim() || 'Sin categoria',
         codigo_barras: form.codigo_barras.trim() || null,
-        fecha_vencimiento: form.fecha_vencimiento || null
+        fecha_vencimiento: form.fecha_vencimiento || null,
+        foto_url: nuevaFotoUrl
       })
       navigate('/')
     } catch (err) {
@@ -61,6 +98,7 @@ export default function EditarProducto() {
   async function eliminar() {
     if (!confirm('Borrar este producto?')) return
     try {
+      if (fotoActual) await eliminarFotoProducto(fotoActual)
       await borrarProducto(id)
       navigate('/')
     } catch (err) {
@@ -86,11 +124,70 @@ export default function EditarProducto() {
     )
   }
 
+  const fotoMostrar = previewFoto || fotoActual
+
   return (
     <div className="px-4 pt-5 pb-24">
       <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
         Editar producto
       </h1>
+
+      {/* FOTO */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2 ml-1">
+          Foto del producto
+        </label>
+        {fotoMostrar ? (
+          <div className="relative">
+            <img
+              src={fotoMostrar}
+              alt="Foto"
+              className="w-full h-48 object-cover rounded-2xl"
+            />
+            {previewFoto ? (
+              <button
+                type="button"
+                onClick={quitarFoto}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-9 h-9 font-bold"
+              >
+                ×
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={eliminarFotoActual}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-9 h-9 font-bold"
+              >
+                ×
+              </button>
+            )}
+            <label className="absolute bottom-2 right-2 bg-white dark:bg-stone-900 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer shadow">
+              Cambiar
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={elegirFoto}
+                className="hidden"
+              />
+            </label>
+          </div>
+        ) : (
+          <label className="block w-full border-2 border-dashed border-gray-200 dark:border-stone-800 rounded-2xl p-8 text-center cursor-pointer active:bg-gray-50 dark:active:bg-stone-900">
+            <p className="text-4xl mb-2">📷</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Agregar foto
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={elegirFoto}
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
 
       <form onSubmit={guardar} className="space-y-3">
         <input
@@ -130,6 +227,9 @@ export default function EditarProducto() {
           <option value="Frutos secos" />
           <option value="Semillas" />
           <option value="Dietetica" />
+          <option value="Perfumes" />
+          <option value="Cremas" />
+          <option value="Maquillaje" />
         </datalist>
 
         <input

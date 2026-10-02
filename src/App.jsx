@@ -18,22 +18,48 @@ import Promos from './pages/Promos'
 import NuevaPromo from './pages/NuevaPromo'
 import EditarPromo from './pages/EditarPromo'
 import ImportarProductos from './pages/ImportarProductos'
+import Configuracion from './pages/Configuracion'
 
 const MENU_LOCAL = [
-  { to: '/', label: 'Stock', icon: '📦' },
-  { to: '/vender', label: 'Vender', icon: '🛒' },
-  { to: '/promos', label: 'Promos', icon: '🎉' },
-  { to: '/ventas', label: 'Ventas de hoy', icon: '📊' },
-  { to: '/reportes', label: 'Reportes', icon: '📈' },
-  { to: '/entrada', label: 'Entrada mercaderia', icon: '📥' },
-  { to: '/importar', label: 'Importar Excel', icon: '📊' },
-  { to: '/lista', label: 'Lista de compras', icon: '📝' },
-  { to: '/cierre', label: 'Cierre de caja', icon: '💵' },
-  { to: '/nuevo', label: 'Nuevo producto', icon: '➕' }
+  {
+    titulo: 'Ventas',
+    icono: '💰',
+    items: [
+      { to: '/vender', label: 'Vender', icon: '🛒' },
+      { to: '/ventas', label: 'Ventas de hoy', icon: '📊' },
+      { to: '/reportes', label: 'Reportes', icon: '📈' },
+      { to: '/cierre', label: 'Cierre de caja', icon: '💵' }
+    ]
+  },
+  {
+    titulo: 'Stock',
+    icono: '📦',
+    items: [
+      { to: '/', label: 'Productos', icon: '🏠' },
+      { to: '/nuevo', label: 'Nuevo producto', icon: '➕' },
+      { to: '/promos', label: 'Promos', icon: '🎉' },
+      { to: '/entrada', label: 'Entrada mercadería', icon: '📥' },
+      { to: '/importar', label: 'Importar Excel', icon: '📊' },
+      { to: '/lista', label: 'Lista de compras', icon: '📝' }
+    ]
+  },
+  {
+    titulo: 'Configuracion',
+    icono: '⚙️',
+    items: [
+      { to: '/configuracion', label: 'Mi local', icon: '🏪' }
+    ]
+  }
 ]
 
 const MENU_ADMIN = [
-  { to: '/admin', label: 'Panel Admin', icon: '👑' }
+  {
+    titulo: 'Administracion',
+    icono: '👑',
+    items: [
+      { to: '/admin', label: 'Panel Admin', icon: '👑' }
+    ]
+  }
 ]
 
 function MenuLateral({ abierto, cerrar, esAdmin, local, cerrarSesion }) {
@@ -46,35 +72,64 @@ function MenuLateral({ abierto, cerrar, esAdmin, local, cerrarSesion }) {
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/50" onClick={cerrar}></div>
       <div className="w-72 bg-white dark:bg-stone-900 h-full shadow-lg overflow-y-auto flex flex-col">
-        <div className="p-4 border-b border-gray-100 dark:border-stone-800 flex justify-between items-center">
-          <div className="min-w-0">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {esAdmin ? 'delbarrio.com' : 'Local'}
-            </p>
-            <p className="font-bold text-barrio-700 dark:text-barrio-500 truncate">
-              {esAdmin ? 'Administrador' : (local?.nombre || 'Mi local')}
-            </p>
+        {/* Header */}
+        <div className="p-4 border-b border-gray-100 dark:border-stone-800 flex justify-between items-center sticky top-0 bg-white dark:bg-stone-900 z-10">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-2xl">🏪</span>
+            <div className="min-w-0">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {esAdmin ? 'delbarrio.com' : 'Local'}
+              </p>
+              <p className="font-bold text-barrio-700 dark:text-barrio-500 truncate">
+                {esAdmin ? 'Administrador' : (local?.nombre || 'Mi local')}
+              </p>
+            </div>
           </div>
-          <button onClick={cerrar} className="text-2xl text-gray-500 dark:text-gray-400 leading-none">×</button>
+          <button
+            onClick={cerrar}
+            className="text-2xl text-gray-500 dark:text-gray-400 leading-none"
+          >
+            ×
+          </button>
         </div>
-        <div className="py-2 flex-1">
-          {menu.map(m => (
-            <Link
-              key={m.to}
-              to={m.to}
-              onClick={cerrar}
-              className={
-                'flex items-center gap-3 px-4 py-3 text-base ' +
-                (pathname === m.to
-                  ? 'bg-orange-50 dark:bg-stone-800 text-barrio-700 dark:text-barrio-500 font-semibold'
-                  : 'text-gray-700 dark:text-gray-300')
-              }
-            >
-              <span className="text-2xl">{m.icon}</span>
-              <span>{m.label}</span>
-            </Link>
+
+        {/* Secciones */}
+        <div className="flex-1 py-2">
+          {menu.map((seccion, idx) => (
+            <div key={idx} className="mb-2">
+              <div className="flex items-center gap-2 px-4 py-2">
+                <span className="text-sm">{seccion.icono}</span>
+                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                  {seccion.titulo}
+                </p>
+              </div>
+              {seccion.items.map(m => {
+                const activo = pathname === m.to
+                return (
+                  <Link
+                    key={m.to}
+                    to={m.to}
+                    onClick={cerrar}
+                    className={
+                      'flex items-center gap-3 pl-6 pr-4 py-2.5 text-sm mx-2 rounded-xl transition-colors ' +
+                      (activo
+                        ? 'bg-orange-50 dark:bg-stone-800 text-barrio-700 dark:text-barrio-500 font-semibold'
+                        : 'text-gray-700 dark:text-gray-300 active:bg-gray-50 dark:active:bg-stone-800')
+                    }
+                  >
+                    <span className="text-xl">{m.icon}</span>
+                    <span>{m.label}</span>
+                    {activo && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-barrio-500"></span>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
           ))}
         </div>
+
+        {/* Cerrar sesión */}
         <div className="border-t border-gray-100 dark:border-stone-800 p-4">
           <button
             onClick={() => {
@@ -83,9 +138,10 @@ function MenuLateral({ abierto, cerrar, esAdmin, local, cerrarSesion }) {
                 cerrar()
               }
             }}
-            className="w-full text-left text-red-600 dark:text-red-400 font-semibold py-2"
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 font-semibold rounded-xl active:bg-red-50 dark:active:bg-red-950"
           >
-            🚪 Cerrar sesion
+            <span className="text-xl">🚪</span>
+            <span>Cerrar sesión</span>
           </button>
         </div>
       </div>
@@ -98,6 +154,7 @@ function BotonVender() {
   if (pathname === '/vender') return null
   if (pathname.startsWith('/promos')) return null
   if (pathname === '/importar') return null
+  if (pathname === '/configuracion') return null
   return (
     <Link
       to="/vender"
@@ -190,6 +247,7 @@ function AppLocal({ local, cerrarSesion }) {
           <Route path="/reportes" element={<Reportes />} />
           <Route path="/cierre" element={<CierreCaja />} />
           <Route path="/nuevo" element={<NuevoProducto />} />
+          <Route path="/configuracion" element={<Configuracion />} />
           <Route path="/ticket/:id" element={<Ticket />} />
           <Route path="/editar/:id" element={<EditarProducto />} />
           <Route path="*" element={<Productos />} />
@@ -213,9 +271,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* RUTA PUBLICA - sin login */}
-<Route path="/t/:token" element={<TicketPublico />} />
-        {/* RUTAS PRIVADAS */}
+        <Route path="/t/:token" element={<TicketPublico />} />
+
         <Route
           path="*"
           element={

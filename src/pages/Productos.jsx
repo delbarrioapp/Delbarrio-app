@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { listarProductos, ajustarStock, borrarProducto, actualizarProducto } from '../lib/api'
+import { listarProductos, ajustarStock, borrarProducto, actualizarProducto, eliminarFotoProducto } from '../lib/api'
 import Escaner from '../components/Escaner'
 
 function diasParaVencer(fecha) {
@@ -9,6 +9,25 @@ function diasParaVencer(fecha) {
   hoy.setHours(0, 0, 0, 0)
   const vence = new Date(fecha + 'T00:00:00')
   return Math.floor((vence - hoy) / (1000 * 60 * 60 * 24))
+}
+
+function iconoCategoria(cat) {
+  const c = (cat || '').toLowerCase()
+  if (c.includes('bebida')) return '🥤'
+  if (c.includes('golosina')) return '🍬'
+  if (c.includes('galletit')) return '🍪'
+  if (c.includes('cigarr')) return '🚬'
+  if (c.includes('snack')) return '🍟'
+  if (c.includes('lacte')) return '🥛'
+  if (c.includes('pan')) return '🥖'
+  if (c.includes('fruto')) return '🥜'
+  if (c.includes('semilla')) return '🌰'
+  if (c.includes('limpieza')) return '🧴'
+  if (c.includes('perfume')) return '💐'
+  if (c.includes('crema')) return '🧴'
+  if (c.includes('maquillaje')) return '💄'
+  if (c.includes('almacen') || c.includes('almacén')) return '🥫'
+  return '📦'
 }
 
 export default function Productos() {
@@ -81,7 +100,7 @@ export default function Productos() {
       setCantidad('')
     } else {
       if (confirm('Producto no encontrado con codigo ' + codigo + '.\n¿Queres cargarlo?')) {
-        navigate('/nuevo')
+        navigate('/nuevo?codigo=' + encodeURIComponent(codigo))
       }
     }
   }
@@ -89,6 +108,7 @@ export default function Productos() {
   async function eliminar(p) {
     if (!confirm('Borrar ' + p.nombre + '?')) return
     try {
+      if (p.foto_url) await eliminarFotoProducto(p.foto_url)
       await borrarProducto(p.id)
       setProductos(productos.filter(x => x.id !== p.id))
     } catch (e) {
@@ -274,8 +294,26 @@ export default function Productos() {
                 const est = estadoStock(p)
                 const ven = estadoVencimiento(p)
                 return (
-                  <div key={p.id} className="bg-white dark:bg-stone-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-stone-800">
-                    <div className="flex items-start justify-between gap-3 mb-3">
+                  <div key={p.id} className="bg-white dark:bg-stone-900 rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-stone-800">
+                    <div className="flex items-start gap-3 mb-3">
+                      {/* FOTO o ICONO */}
+                      <div
+                        onClick={() => navigate('/editar/' + p.id)}
+                        className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 dark:bg-stone-800 flex items-center justify-center flex-shrink-0 cursor-pointer"
+                      >
+                        {p.foto_url ? (
+                          <img
+                            src={p.foto_url}
+                            alt={p.nombre}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="text-3xl">{iconoCategoria(p.categoria)}</span>
+                        )}
+                      </div>
+
+                      {/* INFO */}
                       <div
                         onClick={() => navigate('/editar/' + p.id)}
                         className="flex-1 min-w-0 cursor-pointer"
@@ -287,16 +325,16 @@ export default function Productos() {
                           ${Number(p.precio).toLocaleString('es-AR')}
                           <span className="text-gray-400 dark:text-gray-500"> / {p.unidad}</span>
                         </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span className={'text-[10px] font-bold px-2 py-1 rounded-full uppercase ' + est.color}>
-                          {est.txt}
-                        </span>
-                        {ven && (
-                          <span className={'text-[10px] font-bold px-2 py-0.5 rounded-full ' + ven.color}>
-                            {ven.txt}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <span className={'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ' + est.color}>
+                            {est.txt}
                           </span>
-                        )}
+                          {ven && (
+                            <span className={'text-[10px] font-bold px-2 py-0.5 rounded-full ' + ven.color}>
+                              {ven.txt}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 

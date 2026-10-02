@@ -288,3 +288,77 @@ export async function anularVenta(ventaId, motivo) {
 }
 
 
+export async function obtenerMiLocal() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No hay sesion')
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('local_id')
+    .eq('id', user.id)
+    .single()
+  if (error) throw error
+  if (!data?.local_id) throw new Error('No tenes local')
+
+  const { data: local, error: errL } = await supabase
+    .from('locales')
+    .select('*')
+    .eq('id', data.local_id)
+    .single()
+  if (errL) throw errL
+  return local
+}
+
+export async function actualizarMiLocal(cambios) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No hay sesion')
+  const { data: usr, error: errU } = await supabase
+    .from('usuarios')
+    .select('local_id')
+    .eq('id', user.id)
+    .single()
+  if (errU) throw errU
+  if (!usr?.local_id) throw new Error('No tenes local')
+
+  const { data, error } = await supabase
+    .from('locales')
+    .update(cambios)
+    .eq('id', usr.local_id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+
+export async function subirFotoProducto(archivo, productoId) {
+  const extension = archivo.name.split('.').pop() || 'jpg'
+  const nombreArchivo = productoId + '-' + Date.now() + '.' + extension
+
+  const { data, error } = await supabase.storage
+    .from('productos')
+    .upload(nombreArchivo, archivo, {
+      cacheControl: '3600',
+      upsert: false
+    })
+  if (error) throw error
+
+  const { data: urlData } = supabase.storage
+    .from('productos')
+    .getPublicUrl(data.path)
+
+  return urlData.publicUrl
+}
+
+export async function eliminarFotoProducto(fotoUrl) {
+  if (!fotoUrl) return
+  try {
+    const partes = fotoUrl.split('/productos/')
+    if (partes.length < 2) return
+    const nombre = partes[1]
+    await supabase.storage.from('productos').remove([nombre])
+  } catch (e) {
+    // no hacer nada si falla
+  }
+}
+
+

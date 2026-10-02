@@ -12,22 +12,15 @@ export default function TicketPublico() {
 
   async function cargar() {
     try {
-      console.log('Token recibido:', token)
-      
-      // Asegurar sesion anonima
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        console.log('No hay sesion, creando anonima...')
         await supabase.auth.signInAnonymously()
       }
 
       const { data, error } = await supabase.rpc('obtener_ticket_publico', {
         p_token: token
       })
-      
-      console.log('Resultado RPC:', data)
-      console.log('Error RPC:', error)
-      
+
       if (error) throw error
       if (!data || !data.venta) {
         setError('Ticket no encontrado')
@@ -35,7 +28,6 @@ export default function TicketPublico() {
         setTicket(data)
       }
     } catch (e) {
-      console.error('Error:', e)
       setError(e.message)
     }
     setCargando(false)
@@ -95,6 +87,14 @@ export default function TicketPublico() {
             </p>
           </div>
 
+          {(local?.telefono || local?.direccion || local?.instagram) && (
+            <div className="bg-orange-50 dark:bg-stone-800 px-5 py-3 text-xs text-gray-700 dark:text-gray-300 space-y-1 border-b border-gray-100 dark:border-stone-800">
+              {local?.telefono && <p>📞 {local.telefono}</p>}
+              {local?.direccion && <p>📍 {local.direccion}</p>}
+              {local?.instagram && <p>📷 {local.instagram}</p>}
+            </div>
+          )}
+
           <div className="p-5">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
               Detalle
@@ -128,9 +128,30 @@ export default function TicketPublico() {
               </p>
             </div>
 
+            {(local?.cuit || local?.cbu || local?.alias || local?.link_mp) && (
+              <div className="bg-gray-50 dark:bg-stone-950 rounded-xl p-3 mb-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">
+                  Datos de pago
+                </p>
+                <div className="space-y-1 text-xs text-gray-600 dark:text-gray-300">
+                  {local?.cuit && <p><b>CUIT:</b> {local.cuit}</p>}
+                  {local?.cbu && <p className="break-all"><b>CBU:</b> {local.cbu}</p>}
+                  {local?.alias && <p><b>Alias:</b> {local.alias}</p>}
+                  {local?.link_mp && (
+                    <p className="break-all">
+                      <b>Mercado Pago:</b>{' '}
+                      <a href={local.link_mp} className="text-barrio-500 underline" target="_blank" rel="noreferrer">
+                        Pagar online
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="text-center pt-3 border-t border-gray-100 dark:border-stone-800">
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                ¡Gracias por tu compra!
+                {local?.mensaje_ticket || '¡Gracias por tu compra!'}
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500">
                 💚 {local?.nombre || 'Local'}
