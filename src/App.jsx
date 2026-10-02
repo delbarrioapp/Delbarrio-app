@@ -11,6 +11,7 @@ import EntradaMercaderia from './pages/EntradaMercaderia'
 import ListaCompras from './pages/ListaCompras'
 import Reportes from './pages/Reportes'
 import Ticket from './pages/Ticket'
+import TicketPublico from './pages/TicketPublico'
 import EditarProducto from './pages/EditarProducto'
 import PanelAdmin from './pages/PanelAdmin'
 import Promos from './pages/Promos'
@@ -209,28 +210,29 @@ function AppLocal({ local, cerrarSesion }) {
 export default function App() {
   const { user, esAdmin, local, cargando, cerrarSesion } = useAuth()
 
-  if (cargando) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-stone-950">
-        <p className="text-gray-400">Cargando...</p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <BrowserRouter>
-        <Login />
-      </BrowserRouter>
-    )
-  }
-
   return (
     <BrowserRouter>
-      {esAdmin
-        ? <AppAdmin esAdmin={esAdmin} local={local} cerrarSesion={cerrarSesion} />
-        : <AppLocal local={local} cerrarSesion={cerrarSesion} />
-      }
+      <Routes>
+        {/* RUTA PUBLICA - sin login */}
+<Route path="/t/:token" element={<TicketPublico />} />
+        {/* RUTAS PRIVADAS */}
+        <Route
+          path="*"
+          element={
+            cargando ? (
+              <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-stone-950">
+                <p className="text-gray-400">Cargando...</p>
+              </div>
+            ) : !user ? (
+              <Login />
+            ) : esAdmin ? (
+              <AppAdmin esAdmin={esAdmin} local={local} cerrarSesion={cerrarSesion} />
+            ) : (
+              <AppLocal local={local} cerrarSesion={cerrarSesion} />
+            )
+          }
+        />
+      </Routes>
     </BrowserRouter>
   )
 }

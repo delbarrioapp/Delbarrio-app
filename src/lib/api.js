@@ -278,3 +278,13 @@ export async function importarProductos(productos) {
 }
 
 
+export async function anularVenta(ventaId, motivo) {
+  const { data, error } = await supabase.rpc('anular_venta', {
+    p_venta_id: ventaId,
+    p_motivo: motivo || 'Error al cobrar'
+  })
+  if (error) throw error
+  return data
+}
+
+
